@@ -1,0 +1,32 @@
+{
+  "id": "cap_lai_can_cuoc",
+  "name": "Cấp lại thẻ căn cước bị mất",
+  "aliases": [
+    "mất thẻ căn cước",
+    "mất căn cước công dân",
+    "làm lại CCCD",
+    "làm lại chứng minh thư",
+    "cấp lại căn cước"
+  ],
+  "formTitle": "TỜ KHAI CĂN CƯỚC — nội dung: Cấp lại thẻ căn cước do bị mất",
+  "fields": [
+    { "key": "ho_ten", "label": "Họ, chữ đệm và tên", "kind": "text", "question": "Bác cho con biết họ và tên đầy đủ của bác ạ?", "hint": "tên người" },
+    { "key": "ngay_sinh", "label": "Ngày, tháng, năm sinh", "kind": "date", "question": "Bác sinh ngày, tháng, năm nào ạ?" },
+    { "key": "gioi_tinh", "label": "Giới tính", "kind": "gender", "question": "Bác là nam hay nữ ạ?" },
+    { "key": "so_dinh_danh", "label": "Số định danh cá nhân (số căn cước cũ)", "kind": "id12", "question": "Bác có nhớ 12 số căn cước cũ không ạ? Nếu không nhớ bác cứ nói không nhớ nhé.", "hint": "12 chữ số" },
+    { "key": "so_dien_thoai", "label": "Số điện thoại", "kind": "phone", "question": "Số điện thoại của bác là bao nhiêu ạ?" },
+    { "key": "noi_thuong_tru", "label": "Nơi thường trú", "kind": "text", "question": "Bác đăng ký thường trú ở địa chỉ nào ạ?", "hint": "ghi đủ số nhà, đường, phường/xã, tỉnh/thành phố" }
+  ],
+  "documents": [
+    "Bác đến trực tiếp để chụp ảnh và lấy vân tay",
+    "Tờ khai căn cước — app đã điền sẵn thông tin",
+    "Mang theo giấy tờ có ảnh khác nếu có (giấy phép lái xe, hộ chiếu…) để đối chiếu"
+  ],
+  "office": {
+    "name": "Công an phường / xã hoặc cơ quan quản lý căn cước nơi bác ở",
+    "address": "Ví dụ demo — CẦN CẬP NHẬT ĐỊA CHỈ THẬT",
+    "hours": "Giờ hành chính các ngày làm việc",
+    "note": "Có thể đặt lịch trước qua ứng dụng VNeID để đỡ phải chờ."
+  },
+  "source": "BẢN NHÁP — đối chiếu lại với Luật Căn cước 2023 và Cổng DVC trước khi demo"
+}

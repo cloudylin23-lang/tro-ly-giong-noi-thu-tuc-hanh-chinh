@@ -1,0 +1,36 @@
+{
+  "id": "tam_tru",
+  "name": "Đăng ký tạm trú",
+  "aliases": [
+    "đăng ký tạm trú",
+    "khai báo tạm trú",
+    "khai báo chỗ ở mới",
+    "mới chuyển đến ở",
+    "lên ở với con cháu",
+    "ở trọ, thuê nhà"
+  ],
+  "formTitle": "TỜ KHAI THAY ĐỔI THÔNG TIN CƯ TRÚ (Mẫu CT01) — nội dung: Đăng ký tạm trú",
+  "fields": [
+    { "key": "ho_ten", "label": "Họ, chữ đệm và tên", "kind": "text", "question": "Bác cho con biết họ và tên đầy đủ của bác ạ?", "hint": "tên người" },
+    { "key": "ngay_sinh", "label": "Ngày, tháng, năm sinh", "kind": "date", "question": "Bác sinh ngày, tháng, năm nào ạ?" },
+    { "key": "gioi_tinh", "label": "Giới tính", "kind": "gender", "question": "Bác là nam hay nữ ạ?" },
+    { "key": "so_dinh_danh", "label": "Số định danh cá nhân (số căn cước)", "kind": "id12", "question": "Bác đọc giúp con 12 số trên thẻ căn cước nhé.", "hint": "12 chữ số in trên thẻ căn cước" },
+    { "key": "so_dien_thoai", "label": "Số điện thoại", "kind": "phone", "question": "Số điện thoại của bác là bao nhiêu ạ?" },
+    { "key": "dia_chi_tam_tru", "label": "Địa chỉ đăng ký tạm trú", "kind": "text", "question": "Bác đang ở địa chỉ nào ạ? Bác nói cả số nhà, đường và phường giúp con.", "hint": "ghi đủ số nhà, ngõ, đường, phường/xã, tỉnh/thành phố" },
+    { "key": "thoi_han", "label": "Thời hạn tạm trú", "kind": "text", "question": "Bác định ở đây trong bao lâu ạ?", "hint": "ví dụ: 12 tháng, 2 năm, đến tháng 12/2027" },
+    { "key": "chu_ho", "label": "Chủ hộ / chủ nhà và quan hệ với người khai", "kind": "text", "question": "Chủ nhà nơi bác ở tên là gì, và là gì của bác ạ?", "hint": "tên chủ nhà kèm quan hệ, ví dụ: Nguyễn Văn Nam, con trai" }
+  ],
+  "documents": [
+    "Tờ khai thay đổi thông tin cư trú (Mẫu CT01) — app đã điền sẵn",
+    "Thẻ căn cước của bác",
+    "Giấy tờ chứng minh chỗ ở hợp pháp: hợp đồng thuê nhà, hoặc giấy tờ nhà của chủ nhà",
+    "Chủ nhà / chủ hộ ghi ý kiến đồng ý vào tờ khai (hoặc đồng ý trên ứng dụng VNeID)"
+  ],
+  "office": {
+    "name": "Công an phường nơi bác đang ở",
+    "address": "Ví dụ demo: Công an phường Khương Đình, Hà Nội — CẦN CẬP NHẬT ĐỊA CHỈ THẬT",
+    "hours": "Thứ Hai – Thứ Sáu: 8:00–12:00, 13:30–17:00 · Sáng thứ Bảy (tuỳ nơi)",
+    "note": "Bác cũng có thể nhờ con cháu nộp online qua ứng dụng VNeID hoặc Cổng dịch vụ công Bộ Công an."
+  },
+  "source": "BẢN NHÁP — đối chiếu lại với Luật Cư trú 2020, Thông tư 66/2023/TT-BCA và Cổng DVC trước khi demo"
+}

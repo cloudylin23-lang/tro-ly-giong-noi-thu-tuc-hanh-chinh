@@ -1,0 +1,42 @@
+{
+  "expo": {
+    "name": "Trợ lý thủ tục",
+    "slug": "tro-ly-thu-tuc",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "vn.trolythutuc.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#FFFBF2",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "vn.trolythutuc.app"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-status-bar",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Trợ lý cần dùng micro để nghe bác nói.",
+          "recordAudioAndroid": true,
+          "enableBackgroundRecording": false
+        }
+      ],
+      "expo-sharing",
+      "expo-asset"
+    ],
+    "scheme": "trolythutuc"
+  }
+}

@@ -1,0 +1,10 @@
+node_modules/
+.env
+.env.local
+.expo/
+.vercel/
+mobile/android/
+mobile/ios/
+*.apk
+*.aab
+.DS_Store

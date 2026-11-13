@@ -1,0 +1,60 @@
+{
+  "classify": [
+    { "utterance": "Tôi muốn đăng ký tạm trú", "expect": "tam_tru" },
+    { "utterance": "bác mới lên hà nội ở với con trai thì phải khai báo gì không cháu", "expect": "tam_tru" },
+    { "utterance": "ở trọ thì có phải lên phường báo không", "expect": "tam_tru" },
+    { "utterance": "tôi đánh rơi mất cái thẻ căn cước rồi", "expect": "cap_lai_can_cuoc" },
+    { "utterance": "làm lại chứng minh thư bị mất", "expect": "cap_lai_can_cuoc" },
+    { "utterance": "hôm nay trời đẹp nhỉ", "expect": null },
+    { "utterance": "ờ thì cái đó á", "expect": null }
+  ],
+  "extract": [
+    {
+      "field": "ho_ten",
+      "utterance": "tên tôi là nguyễn thị lan",
+      "expect": { "ho_ten": "Nguyễn Thị Lan" }
+    },
+    {
+      "field": "ngay_sinh",
+      "utterance": "tôi sinh ngày mười hai tháng ba năm năm tám",
+      "expect": { "ngay_sinh": "12/03/1958" }
+    },
+    {
+      "field": "ngay_sinh",
+      "utterance": "năm nay tôi sáu mươi lăm tuổi rồi",
+      "expect": {}
+    },
+    {
+      "field": "so_dinh_danh",
+      "utterance": "không không một một năm tám không không một hai ba bốn năm",
+      "expect": { "so_dinh_danh": "001158001234" }
+    },
+    {
+      "field": "so_dien_thoai",
+      "utterance": "số tôi là không chín tám, một hai ba, bốn năm sáu bảy",
+      "expect": { "so_dien_thoai": "0981234567" }
+    },
+    {
+      "field": "gioi_tinh",
+      "utterance": "tôi là đàn bà",
+      "expect": { "gioi_tinh": "Nữ" }
+    },
+    {
+      "field": "ho_ten",
+      "utterance": "tôi là trần văn hùng sinh năm năm tư ngày mùng một tháng năm",
+      "expect": { "ho_ten": "Trần Văn Hùng", "ngay_sinh": "01/05/1954" }
+    },
+    {
+      "field": "so_dinh_danh",
+      "utterance": "cái này tôi không nhớ",
+      "expectAct": "dont_know",
+      "expect": {}
+    },
+    {
+      "field": "dia_chi_tam_tru",
+      "utterance": "hả con nói gì cơ",
+      "expectAct": "repeat",
+      "expect": {}
+    }
+  ]
+}
