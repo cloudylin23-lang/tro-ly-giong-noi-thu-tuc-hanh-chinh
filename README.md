@@ -1,4 +1,4 @@
-# Trợ lý thủ tục 🎤
+# Trợ lý thủ tục 
 
 > Nói điều mình cần, AI lo phần điền tờ khai và giấy tờ.
 
