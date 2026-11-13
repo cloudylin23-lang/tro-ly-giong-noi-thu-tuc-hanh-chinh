@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import { copy } from '@/copy';
 import { procedures } from '@/data/procedures';
 import type { ClassifyResponse, ExtractResponse, Field, FieldSpec, Procedure } from '@/types';
@@ -66,8 +67,14 @@ export const api = {
   /** Gửi file ghi âm (uri cục bộ) → chữ */
   async stt(uri: string): Promise<string> {
     const form = new FormData();
-    // React Native nhận object {uri, name, type} làm file trong FormData
-    form.append('audio', { uri, name: 'audio.m4a', type: 'audio/m4a' } as unknown as Blob);
+    if (Platform.OS === 'web') {
+      // Web: uri là blob: URL, trình duyệt ghi ra webm
+      const blob = await (await fetch(uri)).blob();
+      form.append('audio', blob, blob.type.includes('mp4') ? 'audio.m4a' : 'audio.webm');
+    } else {
+      // React Native nhận object {uri, name, type} làm file trong FormData
+      form.append('audio', { uri, name: 'audio.m4a', type: 'audio/m4a' } as unknown as Blob);
+    }
     const { text } = await request<{ text: string }>('/api/stt', { method: 'POST', body: form }, 20_000);
     return text;
   },
