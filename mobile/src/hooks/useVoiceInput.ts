@@ -44,7 +44,7 @@ export function useVoiceInput(onText: (text: string) => void | Promise<void>) {
   const stop = useCallback(async () => {
     if (stateRef.current !== 'recording') return;
     if (timer.current) clearTimeout(timer.current);
-    const durationMs = recorder.currentTime * 1000;
+    const durationMs = recorder.getStatus().durationMillis;
     set('transcribing');
     try {
       await recorder.stop();
