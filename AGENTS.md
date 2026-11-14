@@ -11,6 +11,9 @@ Monorepo gồm 2 phần độc lập:
 - Kiểu request/response ở `server/lib/types.ts` và `mobile/src/types.ts` phải khớp nhau.
 - Lời thoại cố định nằm ở `mobile/src/copy.ts`. Token giao diện ở `mobile/src/theme.ts` (chữ ≥ 20px, nút ≥ 72px).
 - API key chỉ nằm ở server. Không bao giờ đưa key vào `mobile/`.
+- Không lưu dữ liệu người dùng ở server (không thêm cơ sở dữ liệu, gọi OpenAI với `store: false`). Phiên chỉ nằm trên điện thoại.
+- Log chỉ ghi độ dài và metadata, không ghi nội dung câu nói, số căn cước, số điện thoại (xem `server/lib/log.ts`).
+- `APP_TOKEN` không phải bí mật (nằm trong APK). Không dựa vào nó cho quyền gì ngoài chặn gọi API bừa bãi.
 
 ## Lệnh kiểm tra trước khi xong việc
 ```bash
