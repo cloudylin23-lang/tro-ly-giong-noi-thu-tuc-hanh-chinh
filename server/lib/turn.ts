@@ -77,7 +77,8 @@ async function extract(req: ExtractRequest): Promise<ExtractResponse> {
     required: ['act', 'values', 'reply'],
   };
   const describe = (f: FieldSpec) =>
-    `- key="${f.key}" | ${f.label} | kind=${f.kind}${f.hint ? ` | ${f.hint}` : ''}`;
+    `- key="${f.key}" | ${f.label} | kind=${f.kind}${f.hint ? ` | ${f.hint}` : ''}` +
+    (f.options?.length ? ` | chọn đúng một value: ${f.options.map((o) => `"${o.value}" = ${o.label}`).join('; ')}` : '');
   const input = [
     `Thủ tục: ${req.procedureName}`,
     'currentField (đang hỏi):',

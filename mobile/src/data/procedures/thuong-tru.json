@@ -1,0 +1,157 @@
+{
+  "id": "thuong_tru",
+  "name": "Đăng ký thường trú",
+  "aliases": [
+    "đăng ký thường trú",
+    "nhập hộ khẩu",
+    "chuyển hộ khẩu",
+    "chuyển hẳn về ở",
+    "về ở hẳn với con cháu",
+    "đăng ký hộ khẩu nơi ở mới"
+  ],
+  "form": "CT01",
+  "formTitle": "TỜ KHAI THAY ĐỔI THÔNG TIN CƯ TRÚ",
+  "fields": [
+    {
+      "key": "ho_ten",
+      "label": "Họ, chữ đệm và tên khai sinh",
+      "kind": "text",
+      "question": "Bác cho con biết họ và tên đầy đủ của bác ạ?",
+      "hint": "tên người"
+    },
+    {
+      "key": "ngay_sinh",
+      "label": "Ngày, tháng, năm sinh",
+      "kind": "date",
+      "question": "Bác sinh ngày, tháng, năm nào ạ?"
+    },
+    {
+      "key": "gioi_tinh",
+      "label": "Giới tính",
+      "kind": "gender",
+      "question": "Bác là nam hay nữ ạ?"
+    },
+    {
+      "key": "so_dinh_danh",
+      "label": "Số định danh cá nhân (số căn cước)",
+      "kind": "id12",
+      "question": "Bác đọc giúp con 12 số trên thẻ căn cước nhé.",
+      "hint": "12 chữ số in trên thẻ căn cước"
+    },
+    {
+      "key": "so_dien_thoai",
+      "label": "Số điện thoại",
+      "kind": "phone",
+      "question": "Số điện thoại của bác là bao nhiêu ạ?"
+    },
+    {
+      "key": "email",
+      "label": "Email",
+      "kind": "email",
+      "question": "Bác có địa chỉ email không ạ? Không có thì bác nói không có nhé.",
+      "hint": "nếu người dùng nói không có / không dùng → act=dont_know"
+    },
+    {
+      "key": "dia_chi_thuong_tru",
+      "label": "Địa chỉ đăng ký thường trú mới",
+      "kind": "text",
+      "question": "Bác muốn đăng ký thường trú ở địa chỉ nào ạ? Bác nói cả số nhà, đường và phường giúp con.",
+      "hint": "ghi đủ số nhà, ngõ, đường, phường/xã, tỉnh/thành phố"
+    },
+    {
+      "key": "loai_cho_o",
+      "label": "Trường hợp chỗ ở",
+      "kind": "choice",
+      "question": "Nhà đó là nhà của bác, bác về ở với người thân như vợ chồng, con cái, hay bác thuê, mượn, ở nhờ ạ?",
+      "hint": "về ở với vợ/chồng, con, cha mẹ, ông bà… → nha_nguoi_than; thuê, mượn, ở nhờ → thue_o_nho",
+      "options": [
+        {
+          "value": "nha_minh",
+          "label": "Nhà thuộc sở hữu của bác",
+          "documents": [
+            "Giấy tờ chứng minh nhà của bác (sổ đỏ, sổ hồng, hợp đồng mua bán nhà…) — 1 bản sao, chỉ cần khi công an không tra được trên hệ thống"
+          ]
+        },
+        {
+          "value": "nha_nguoi_than",
+          "label": "Về ở với người thân (vợ chồng, con, cha mẹ…)",
+          "documents": [
+            "Chủ hộ hoặc chủ nhà ghi ý kiến đồng ý vào tờ khai (hoặc xác nhận đồng ý trên ứng dụng VNeID)",
+            "Giấy tờ chứng minh quan hệ với chủ hộ (giấy khai sinh, giấy đăng ký kết hôn…) — 1 bản sao, chỉ cần khi công an không tra được trên hệ thống",
+            "Giấy tờ chứng minh nhà hợp pháp của chủ nhà — chỉ cần khi công an không tra được trên hệ thống"
+          ]
+        },
+        {
+          "value": "thue_o_nho",
+          "label": "Thuê, mượn hoặc ở nhờ",
+          "documents": [
+            "Chủ nhà ghi ý kiến đồng ý vào tờ khai (hoặc xác nhận đồng ý trên ứng dụng VNeID)",
+            "Hợp đồng thuê, mượn, ở nhờ ĐÃ CÔNG CHỨNG hoặc CHỨNG THỰC — 1 bản sao",
+            "Giấy tờ chứng minh đủ diện tích ở tối thiểu theo quy định của tỉnh, thành phố (không dưới 8 m² sàn mỗi người)"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "ho_ten_chu_ho",
+      "label": "Họ, chữ đệm và tên chủ hộ",
+      "kind": "text",
+      "question": "Chủ hộ nơi bác ở tên đầy đủ là gì ạ?",
+      "hint": "tên người đứng tên chủ hộ (chủ nhà)",
+      "when": {
+        "field": "loai_cho_o",
+        "in": [
+          "nha_nguoi_than",
+          "thue_o_nho"
+        ]
+      }
+    },
+    {
+      "key": "quan_he_chu_ho",
+      "label": "Mối quan hệ với chủ hộ",
+      "kind": "text",
+      "question": "Chủ hộ là gì của bác ạ? Ví dụ con trai, con gái, hay người cho thuê nhà.",
+      "hint": "quan hệ của NGƯỜI KHAI với chủ hộ, viết ngắn: \"Bố\", \"Mẹ\", \"Ông\", \"Bà\", \"Người thuê nhà\", \"Ở nhờ\"... Nếu chủ hộ là con trai của người khai thì người khai là \"Bố\" hoặc \"Mẹ\"",
+      "when": {
+        "field": "loai_cho_o",
+        "in": [
+          "nha_nguoi_than",
+          "thue_o_nho"
+        ]
+      }
+    },
+    {
+      "key": "so_dinh_danh_chu_ho",
+      "label": "Số định danh cá nhân của chủ hộ",
+      "kind": "id12",
+      "question": "Bác có biết 12 số căn cước của chủ hộ không ạ? Không nhớ thì bác cứ nói không nhớ nhé.",
+      "hint": "12 chữ số trên thẻ căn cước của chủ hộ",
+      "when": {
+        "field": "loai_cho_o",
+        "in": [
+          "nha_nguoi_than",
+          "thue_o_nho"
+        ]
+      }
+    }
+  ],
+  "documents": [
+    "Tờ khai thay đổi thông tin cư trú (Mẫu CT01, Thông tư 116/2026/TT-BCA) — app đã chuẩn bị sẵn nội dung để bác chép sang",
+    "Thẻ căn cước hoặc tài khoản VNeID để cán bộ đối chiếu",
+    "Lưu ý: giấy tờ nào công an đã tra được trên hệ thống hoặc VNeID thì bác không phải nộp lại"
+  ],
+  "office": {
+    "name": "Công an xã, phường nơi bác muốn đăng ký thường trú",
+    "address": "Ví dụ trong demo: Công an phường Khương Đình, Hà Nội",
+    "hours": "Thứ Hai đến hết sáng thứ Bảy (trừ ngày lễ, Tết)",
+    "processing": "Có kết quả trong 7 ngày làm việc sau khi nộp đủ hồ sơ",
+    "fee": "20.000đ nộp trực tiếp · 10.000đ nộp qua Cổng Dịch vụ công · Miễn phí nếu nộp qua VNeID (đến hết 31/12/2026)",
+    "note": "Bác có thể nhờ con cháu nộp online qua ứng dụng VNeID, hiện đang được miễn lệ phí."
+  },
+  "source": "Cổng Dịch vụ công Quốc gia, thủ tục Đăng ký thường trú (mã 1.004222); Luật Cư trú 2020 (Điều 20); Thông tư 116/2026/TT-BCA (biểu mẫu CT01, thay toàn bộ biểu mẫu cư trú từ 01/7/2026); Công an tỉnh An Giang về miễn lệ phí qua VNeID. Truy cập 13/11/2026.",
+  "sourceUrls": [
+    "https://congan.angiang.gov.vn/dang-ky-thuong-tru-theo-quy-dinh-moi-nguoi-dan-duoc-mien-le-phi-khi-thuc-hien-qua-vneid-den-het-nam-2026",
+    "https://luatvietnam.vn/tin-van-ban-moi/tu-01-7-2026-thay-the-toan-bo-15-bieu-mau-dang-ky-quan-ly-cu-tru-186-110380-article.html",
+    "https://congbao.chinhphu.vn/van-ban/thong-tu-so-116-2026-tt-bca-470078.htm"
+  ]
+}

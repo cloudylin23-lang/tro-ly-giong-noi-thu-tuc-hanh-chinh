@@ -1,9 +1,13 @@
-import type { FieldKind } from '@/types';
+import type { Field } from '@/types';
+
+/** Phần của Field cần để kiểm tra / hiển thị giá trị */
+export type FieldShape = Pick<Field, 'kind' | 'options'>;
 
 export type Checked = { ok: true; value: string } | { ok: false; reason: string };
 
 /** Chuẩn hoá + kiểm tra giá trị AI trích ra. Code quyết định, không tin hoàn toàn vào AI. */
-export function check(kind: FieldKind, raw: string): Checked {
+export function check(field: FieldShape, raw: string): Checked {
+  const { kind } = field;
   const v = raw.trim().replace(/\s+/g, ' ');
   if (!v) return { ok: false, reason: 'Con chưa nghe thấy thông tin.' };
 
@@ -43,13 +47,29 @@ export function check(kind: FieldKind, raw: string): Checked {
       if (/(nam|đàn ông|male|trai)/.test(s)) return { ok: true, value: 'Nam' };
       return { ok: false, reason: 'Bác là nam hay nữ ạ?' };
     }
+
+    case 'email': {
+      const e = v.replace(/\s+/g, '').toLowerCase();
+      return /^[^@\s]+@[^@\s]+\.[a-z]{2,}$/.test(e) ? { ok: true, value: e } : { ok: false, reason: 'Địa chỉ email này chưa đúng.' };
+    }
+
+    case 'choice': {
+      // AI phải trả về đúng value; chấp nhận cả khi trả về nhãn
+      const s = fold(v);
+      const opt = field.options?.find((o) => fold(o.value) === s || fold(o.label) === s);
+      return opt ? { ok: true, value: opt.value } : { ok: false, reason: 'Con chưa rõ bác thuộc trường hợp nào.' };
+    }
   }
 }
 
 const pad = (n: number) => String(n).padStart(2, '0');
+const fold = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/gi, 'd').toLowerCase().trim();
+const optionLabel = (field: FieldShape, value: string) => field.options?.find((o) => o.value === value)?.label ?? value;
 
 /** Cách đọc to một giá trị cho TTS nghe rõ (số đọc từng chữ số, ngày đọc đầy đủ). */
-export function speakable(kind: FieldKind, value: string): string {
+export function speakable(field: FieldShape, value: string): string {
+  const { kind } = field;
+  if (kind === 'choice') return optionLabel(field, value);
   if (kind === 'id12' || kind === 'phone') {
     const groups = kind === 'phone' ? [value.slice(0, 4), value.slice(4, 7), value.slice(7)] : value.match(/.{1,3}/g) ?? [];
     return groups.map((g) => g.split('').join(' ')).join(', ');
@@ -62,7 +82,9 @@ export function speakable(kind: FieldKind, value: string): string {
 }
 
 /** Cách hiển thị trên màn hình */
-export function displayable(kind: FieldKind, value: string): string {
+export function displayable(field: FieldShape, value: string): string {
+  const { kind } = field;
+  if (kind === 'choice') return optionLabel(field, value);
   if (kind === 'id12') return value.match(/.{1,3}/g)?.join(' ') ?? value;
   if (kind === 'phone') return `${value.slice(0, 4)} ${value.slice(4, 7)} ${value.slice(7)}`;
   return value;

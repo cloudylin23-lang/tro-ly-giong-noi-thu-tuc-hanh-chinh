@@ -21,7 +21,8 @@
 - Họ tên: Trần Văn Hùng · Ngày sinh: 01/05/1954 · Nam
 - Số căn cước: 001054012345 · SĐT: 0912 345 678
 - Địa chỉ: Số 12, ngõ 79 Nguyễn Như Kon Tum, phường Khương Đình, Hà Nội
-- Thời hạn: 2 năm · Chủ nhà: Trần Minh Quân, con trai
+- Email: nói "không có" (app bỏ qua) · Thời hạn: 2 năm
+- Trường hợp chỗ ở: ở nhà con trai → chủ hộ: Trần Minh Quân · quan hệ với chủ hộ: Bố · số căn cước chủ hộ: 001085067890
 
 ## Câu hỏi giám khảo có thể đặt
 - *Sao không dùng chatbot text của chính phủ?* Người dùng mục tiêu ít đọc và gõ. Với họ, nói chuyện tự nhiên và được hỏi lại từng câu là lý do cốt lõi để dùng được, không phải một kênh phụ.

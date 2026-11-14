@@ -1,12 +1,13 @@
 // Giữ đồng bộ với mobile/src/types.ts (phần request/response)
 
-export type FieldKind = 'text' | 'date' | 'id12' | 'phone' | 'gender';
+export type FieldKind = 'text' | 'date' | 'id12' | 'phone' | 'gender' | 'email' | 'choice';
 
 export interface FieldSpec {
   key: string;
   label: string; // tên hiển thị, vd "Ngày sinh"
   kind: FieldKind;
   hint?: string; // gợi ý cho AI, vd "ghi cả số nhà, đường, phường"
+  options?: { value: string; label: string }[]; // kind=choice: AI phải trả về đúng một value
 }
 
 export interface ProcedureBrief {
