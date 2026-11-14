@@ -32,8 +32,11 @@ describe('transcribe', () => {
     expect(args.model).toBeTruthy();
   });
 
-  it('OpenAI lỗi → báo lỗi, không trả chữ rỗng', async () => {
+  it('OpenAI lỗi liên tục (cả model dự phòng) → 503, không trả chữ rỗng', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'log').mockImplementation(() => {});
     fake.transcribe.mockRejectedValue(new InternalServerError(500, { message: 'boom' }, 'boom', new Headers()));
-    await expect(transcribe(audioFile())).rejects.toBeTruthy();
+    await expect(transcribe(audioFile())).rejects.toMatchObject({ status: 503 });
+    expect(fake.transcribe).toHaveBeenCalledTimes(2);
   });
 });

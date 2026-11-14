@@ -117,9 +117,12 @@ describe('runTurn — extract', () => {
 });
 
 describe('runTurn — OpenAI lỗi / trả sai', () => {
-  it('OpenAI báo lỗi → không trả kết quả bịa', async () => {
+  it('OpenAI báo lỗi liên tục (cả model dự phòng) → 503, không trả kết quả bịa', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'log').mockImplementation(() => {});
     fake.responses.mockRejectedValue(new RateLimitError(429, { message: 'slow down' }, 'slow down', new Headers()));
-    await expect(runTurn(classifyReq())).rejects.toBeTruthy();
+    await expect(runTurn(classifyReq())).rejects.toMatchObject({ status: 503 });
+    expect(fake.responses).toHaveBeenCalledTimes(2);
   });
 
   it('output không phải JSON → lỗi 502', async () => {
