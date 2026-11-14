@@ -26,8 +26,10 @@ export interface Procedure {
   name: string;
   aliases: string[];
   /** Mẫu tờ khai chính thức để dựng PDF đúng bố cục (không có thì dùng bảng chung) */
-  form?: 'CT01';
+  form?: 'CT01' | 'DC02';
   formTitle: string;
+  /** Tờ khai phụ chỉ cần theo trường hợp, vd Mẫu 02 khi không có giấy tờ nhà. In thêm trang khi `when` thoả. */
+  extraForms?: { form: 'MAU02'; title: string; when: { field: string; in: string[] } }[];
   fields: Field[];
   /** Giấy tờ chung cho mọi trường hợp; giấy tờ riêng nằm trong options của field choice */
   documents: string[];
