@@ -29,7 +29,7 @@ export function check(field: FieldShape, raw: string): Checked {
     case 'id12': {
       const digits = v.replace(/\D/g, '');
       if (digits.length !== 12) {
-        return { ok: false, reason: `Số căn cước cần đủ 12 số, con mới nghe được ${digits.length} số.` };
+        return { ok: false, reason: `Số căn cước cần đúng 12 số, con nghe được ${digits.length} số. Bác đọc lại chậm từng số giúp con nhé.` };
       }
       return { ok: true, value: digits };
     }
@@ -65,6 +65,35 @@ export function check(field: FieldShape, raw: string): Checked {
 const pad = (n: number) => String(n).padStart(2, '0');
 const fold = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/gi, 'd').toLowerCase().trim();
 const optionLabel = (field: FieldShape, value: string) => field.options?.find((o) => o.value === value)?.label ?? value;
+
+// Từ chỉ MỘT chữ số (đã bỏ dấu). AI hay đọc nhầm "năm tám" thành 85 nên dãy số do code tự đổi.
+const DIGIT_WORDS: Record<string, string> = {
+  khong: '0', linh: '0', le: '0',
+  mot: '1',
+  hai: '2', ba: '3', bon: '4', tu: '4',
+  nam: '5', lam: '5', sau: '6', bay: '7', tam: '8', chin: '9',
+};
+// Có các từ này nghĩa là đọc kiểu "mười hai", "một trăm" → không tự đổi được, để AI lo
+const NUMBER_WORDS = new Set(['muoi', 'tram', 'nghin', 'ngan', 'trieu']);
+
+/**
+ * Lấy dãy chữ số từ câu nói, mỗi từ chỉ số = đúng một chữ số.
+ * "số tôi là không chín tám, một hai ba" → "098123". Trả null nếu không chắc chắn.
+ */
+export function digitsFromSpeech(text: string): string | null {
+  let out = '';
+  for (const raw of text.toLowerCase().split(/[^\p{L}\p{N}]+/u)) {
+    if (!raw) continue;
+    if (/^\d+$/.test(raw)) {
+      out += raw;
+      continue;
+    }
+    const w = fold(raw);
+    if (NUMBER_WORDS.has(w)) return null;
+    if (w in DIGIT_WORDS) out += DIGIT_WORDS[w];
+  }
+  return out.length >= 6 ? out : null;
+}
 
 /** Cách đọc to một giá trị cho TTS nghe rõ (số đọc từng chữ số, ngày đọc đầy đủ). */
 export function speakable(field: FieldShape, value: string): string {

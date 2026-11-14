@@ -15,13 +15,16 @@
     { "field": "ho_ten", "utterance": "tên tôi là nguyễn thị lan", "expect": {"ho_ten": "Nguyễn Thị Lan"} },
     { "field": "ngay_sinh", "utterance": "tôi sinh ngày mười hai tháng ba năm năm tám", "expect": {"ngay_sinh": "12/03/1958"} },
     { "field": "ngay_sinh", "utterance": "năm nay tôi sáu mươi lăm tuổi rồi", "expect": {} },
-    { "field": "so_dinh_danh", "utterance": "không không một một năm tám không không một hai ba bốn năm", "expect": {"so_dinh_danh": "001158001234"} },
+    { "field": "so_dinh_danh", "utterance": "không không một một năm tám không không một hai ba bốn", "expect": {"so_dinh_danh": "001158001234"} },
+    { "field": "so_dinh_danh", "utterance": "không không một một năm tám không không một hai ba bốn năm", "expect": {"so_dinh_danh": "0011580012345"} },
     { "field": "so_dien_thoai", "utterance": "số tôi là không chín tám, một hai ba, bốn năm sáu bảy", "expect": {"so_dien_thoai": "0981234567"} },
     { "field": "gioi_tinh", "utterance": "tôi là đàn bà", "expect": {"gioi_tinh": "Nữ"} },
     { "field": "ho_ten", "utterance": "tôi là trần văn hùng sinh năm năm tư ngày mùng một tháng năm", "expect": {"ho_ten": "Trần Văn Hùng", "ngay_sinh": "01/05/1954"} },
     { "field": "so_dinh_danh", "utterance": "cái này tôi không nhớ", "expectAct": "dont_know", "expect": {} },
     { "field": "dia_chi_tam_tru", "utterance": "hả con nói gì cơ", "expectAct": "repeat", "expect": {} },
     { "field": "loai_cho_o", "utterance": "tôi ở nhà thằng con trai tôi", "expect": {"loai_cho_o": "nha_nguoi_than"} },
-    { "field": "loai_cho_o", "utterance": "tôi thuê phòng trọ", "expect": {"loai_cho_o": "thue_o_nho"} }
+    { "field": "loai_cho_o", "utterance": "tôi thuê phòng trọ", "expect": {"loai_cho_o": "thue_o_nho"} },
+    { "field": "ho_ten", "utterance": "tôi là trần văn hùng sinh mùng một tháng năm năm năm tư, ở nhà thằng con trai", "expect": {"ho_ten": "Trần Văn Hùng", "ngay_sinh": "01/05/1954", "loai_cho_o": "nha_nguoi_than"} },
+    { "field": "email", "utterance": "tôi không có email đâu", "expectAct": "dont_know", "expect": {} }
   ]
 }

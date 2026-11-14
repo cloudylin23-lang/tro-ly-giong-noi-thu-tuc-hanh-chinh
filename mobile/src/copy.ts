@@ -38,6 +38,7 @@ export const copy = {
     youSaid: 'Bác vừa nói:',
     filledTitle: 'Đã ghi (bấm để sửa):',
     invalidPrefix: 'Con nghe chưa rõ ạ.',
+    confirmNumber: (label: string, spoken: string) => `Dạ, con ghi ${label.toLowerCase()} là: ${spoken}.`,
     skippedValue: '(để trống — bổ sung sau)',
   },
 

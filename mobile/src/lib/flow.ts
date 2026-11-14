@@ -1,7 +1,7 @@
 // State machine của luồng hỏi đáp. CODE nắm luồng, AI chỉ trích dữ liệu.
 import { copy } from '@/copy';
 import type { ExtractResponse, Field, Procedure, Session } from '@/types';
-import { check, speakable } from './validate';
+import { check, digitsFromSpeech, speakable } from './validate';
 
 export function newSession(procedureId: string): Session {
   return { procedureId, filled: {}, skipped: [], updatedAt: Date.now() };
@@ -55,13 +55,25 @@ export function sayAfter(r: ApplyResult): string {
 }
 
 /** Áp kết quả AI vào phiên, kiểm tra hợp lệ, quyết định câu nói tiếp theo. */
-export function applyTurn(p: Procedure, s: Session, current: Field, res: ExtractResponse): ApplyResult {
+export function applyTurn(
+  p: Procedure,
+  s: Session,
+  current: Field,
+  res: ExtractResponse,
+  /** Câu bác nói (sau STT) — dùng để code tự đổi dãy số, không tin AI ở phần này */
+  utterance?: string,
+): ApplyResult {
   let session: Session = { ...s, filled: { ...s.filled }, skipped: [...s.skipped], updatedAt: Date.now() };
   let currentError: string | null = null;
   let currentAccepted = false;
 
   if (res.act === 'answer') {
-    for (const { key, value } of res.values) {
+    let values = res.values;
+    if ((current.kind === 'id12' || current.kind === 'phone') && utterance) {
+      const spoken = digitsFromSpeech(utterance);
+      if (spoken) values = [...values.filter((v) => v.key !== current.key), { key: current.key, value: spoken }];
+    }
+    for (const { key, value } of values) {
       const field = p.fields.find((f) => f.key === key);
       if (!field) continue;
       const c = check(field, value);
@@ -88,6 +100,10 @@ export function applyTurn(p: Procedure, s: Session, current: Field, res: Extract
   }
   if (res.act === 'repeat') {
     return { session, reply: '', next };
+  }
+  if (currentAccepted && (current.kind === 'id12' || current.kind === 'phone')) {
+    // Dãy số: code tự đọc từng chữ số cho chắc, không dùng câu AI viết (TTS hay đọc "1800" thành "một nghìn tám trăm")
+    return { session, reply: copy.ask.confirmNumber(current.label, speakable(current, session.filled[current.key])), next };
   }
   return { session, reply: res.reply, next };
 }
