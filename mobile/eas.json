@@ -8,8 +8,7 @@
       "distribution": "internal",
       "android": { "buildType": "apk" },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://tro-ly-giong-noi-api.vercel.app",
-        "EXPO_PUBLIC_APP_TOKEN": ""
+        "EXPO_PUBLIC_API_URL": "https://tro-ly-giong-noi-api.vercel.app"
       }
     }
   }
