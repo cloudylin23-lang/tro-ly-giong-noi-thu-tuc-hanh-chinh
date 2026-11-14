@@ -270,7 +270,8 @@
     "hours": "Thứ Hai đến hết sáng thứ Bảy (trừ ngày lễ, Tết)",
     "processing": "Có kết quả trong 7 ngày làm việc sau khi nộp đủ hồ sơ",
     "fee": "20.000đ nộp trực tiếp · 10.000đ nộp qua Cổng Dịch vụ công · Miễn phí nếu nộp qua VNeID (đến hết 31/12/2026)",
-    "note": "Bác có thể nhờ con cháu nộp online qua ứng dụng VNeID, hiện đang được miễn lệ phí."
+    "note": "Bác có thể nhờ con cháu nộp online qua ứng dụng VNeID, hiện đang được miễn lệ phí.",
+    "mapsQuery": "Công an phường Khương Đình, Hà Nội"
   },
   "source": "Cổng Dịch vụ công Quốc gia, thủ tục Đăng ký thường trú (mã 1.004222); Luật Cư trú 2020 (Điều 20); Thông tư 116/2026/TT-BCA (Mẫu CT01, CT02, thay toàn bộ biểu mẫu cư trú từ 01/7/2026); Nghị định 58/2026/NĐ-CP (Mẫu số 01, 02 Phụ lục IV); Công an tỉnh An Giang về miễn lệ phí qua VNeID. Truy cập 14/11/2026.",
   "sourceUrls": [

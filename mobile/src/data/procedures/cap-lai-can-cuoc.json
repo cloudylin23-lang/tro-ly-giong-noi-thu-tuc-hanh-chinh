@@ -94,8 +94,10 @@
     "hours": "Giờ hành chính, thứ Hai đến thứ Bảy (trừ ngày lễ, Tết)",
     "processing": "Không quá 7 ngày làm việc. Nhận thẻ tại nơi làm hoặc qua bưu điện",
     "fee": "Người cao tuổi được MIỄN lệ phí. Người khác: 70.000đ/thẻ, đang giảm 50% (35.000đ) đến hết 31/12/2026",
-    "note": "Từ 15/3/2026 có thể gửi đề nghị cấp lại online trên VNeID, rồi đến đúng lịch hẹn để hoàn tất."
+    "note": "Từ 15/3/2026 có thể gửi đề nghị cấp lại online trên VNeID, rồi đến đúng lịch hẹn để hoàn tất.",
+    "mapsQuery": "Công an phường gần đây"
   },
+  "feeExemption": {"minAge": 60, "text": "Bác từ 60 tuổi trở lên, được miễn lệ phí cấp lại căn cước."},
   "source": "Công an tỉnh Khánh Hoà, thủ tục Cấp lại thẻ căn cước (căn cứ Luật Căn cước 2023, Nghị định 70/2024/NĐ-CP, Thông tư 17/2024/TT-BCA, Thông tư 73/2024/TT-BTC, Thông tư 64/2025/TT-BTC); Thông tư 118/2026/TT-BCA ngày 29/6/2026 (Mẫu DC02); Nghị định 58/2026/NĐ-CP về cấp lại trực tuyến từ 15/3/2026 (qua LuatVietnam, Báo Thanh Niên). Truy cập 14/11/2026.",
   "sourceUrls": [
     "https://congan.khanhhoa.gov.vn/FileStorage/images/CCHC/TTHC/CC/3_%20C%C4%83n%20c%C6%B0%E1%BB%9Bc.docx",

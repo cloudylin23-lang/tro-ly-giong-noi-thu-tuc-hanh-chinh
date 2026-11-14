@@ -41,7 +41,11 @@ export interface Procedure {
     processing?: string; // thời hạn giải quyết
     fee?: string; // lệ phí
     note?: string;
+    /** Chữ để tìm nơi nộp trên Google Maps. Chỉ là địa chỉ cơ quan, không ghép địa chỉ nhà bác. */
+    mapsQuery?: string;
   };
+  /** Miễn lệ phí theo tuổi (vd người cao tuổi cấp lại căn cước). Tính từ field `ngay_sinh`. */
+  feeExemption?: { minAge: number; text: string };
   source: string;
   sourceUrls?: string[];
 }
@@ -52,6 +56,7 @@ export interface Session {
   procedureId: string;
   filled: Filled;
   skipped: string[]; // field bác không nhớ / bỏ qua
+  checkedDocs?: string[]; // giấy tờ bác đã tick "đã chuẩn bị" ở màn kết quả
   updatedAt: number;
 }
 
