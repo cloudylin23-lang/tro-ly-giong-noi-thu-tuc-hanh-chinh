@@ -68,6 +68,12 @@ export default function Ask() {
   };
 
   const voice = useVoiceInput(handleText);
+  const { clearRetry } = voice;
+
+  // Câu hỏi đổi (bỏ qua, bấm sửa, đã trả lời) → bỏ file chờ gửi lại, kẻo câu cũ bị ghi vào câu mới
+  useEffect(() => {
+    clearRetry();
+  }, [field?.key, clearRetry]);
 
   if (!procedure || !session) return <Redirect href="/" />;
   if (!field) return <Screen>{null}</Screen>;
@@ -105,9 +111,19 @@ export default function Ask() {
           <AppText>“{heard}”</AppText>
         </Bubble>
       ) : null}
+      {voice.slow ? <Bubble who="warning">{copy.mic.slow}</Bubble> : null}
       {voice.error ? <Bubble who="warning">{voice.error}</Bubble> : null}
+      {voice.canRetry ? (
+        <BigButton label={`🔁  ${copy.mic.retry}`} disabled={locked} onPress={() => void voice.retry()} />
+      ) : null}
 
-      <TextFallback onSubmit={handleText} disabled={locked} />
+      <TextFallback
+        onSubmit={(t) => {
+          voice.clearRetry();
+          void handleText(t);
+        }}
+        disabled={locked}
+      />
       <BigButton
         variant="ghost"
         label={copy.ask.skip}
