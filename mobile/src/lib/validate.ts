@@ -105,6 +105,49 @@ export function digitsFromSpeech(text: string): string | null {
   return best.length >= 6 ? best : null;
 }
 
+export const MASKED_NUMBER = '[dãy số đã ẩn]';
+
+/**
+ * Che các dãy số dài (≥ minDigits chữ số, đọc bằng chữ hoặc viết số) trước khi gửi câu nói cho AI —
+ * số căn cước / số điện thoại không cần đi qua AI vì code đã tự đổi được.
+ * "tôi là Hùng, số căn cước không không một …" → "tôi là Hùng, số căn cước [dãy số đã ẩn]"
+ */
+export function maskLongDigitRuns(text: string, minDigits = 9): string {
+  const lower = text.toLowerCase().normalize('NFC');
+  const words = fold(lower) === lower.trim() ? DIGIT_WORDS_PLAIN : DIGIT_WORDS;
+  // Tách giữ nguyên dấu cách / dấu câu: [từ, ngăn cách, từ, ngăn cách, …]
+  const parts = text.normalize('NFC').split(/([^\p{L}\p{N}]+)/u);
+  const digitsOf = (part: string) => {
+    const p = part.toLowerCase();
+    return /^\d+$/.test(p) ? p.length : words[p] ? 1 : 0;
+  };
+  const out: string[] = [];
+  let i = 0;
+  while (i < parts.length) {
+    if (i % 2 === 0 && digitsOf(parts[i]) > 0) {
+      // gom một đoạn từ chỉ số liền nhau (chỉ cách nhau bởi dấu cách / dấu câu)
+      let j = i;
+      let count = 0;
+      while (j < parts.length && digitsOf(parts[j]) > 0) {
+        count += digitsOf(parts[j]);
+        j += 2;
+      }
+      const end = j - 2; // chỉ số của từ chỉ số cuối cùng trong đoạn
+      if (count >= minDigits) {
+        out.push(MASKED_NUMBER);
+      } else {
+        out.push(parts.slice(i, end + 1).join(''));
+      }
+      if (end + 1 < parts.length) out.push(parts[end + 1]); // ngăn cách sau đoạn
+      i = end + 2;
+    } else {
+      out.push(parts[i]);
+      i++;
+    }
+  }
+  return out.join('');
+}
+
 /** Cách đọc to một giá trị cho TTS nghe rõ (số đọc từng chữ số, ngày đọc đầy đủ). */
 export function speakable(field: FieldShape, value: string): string {
   const { kind } = field;

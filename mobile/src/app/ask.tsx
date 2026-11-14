@@ -13,9 +13,9 @@ import { copy } from '@/copy';
 import { getProcedure } from '@/data/procedures';
 import { useVoiceInput } from '@/hooks/useVoiceInput';
 import { api, friendlyError } from '@/lib/api';
-import { activeFields, applyTurn, nextField, progress, remainingFields, reopen, sayAfter, skip } from '@/lib/flow';
+import { activeFields, applyTurn, localNumberTurn, nextField, progress, remainingFields, reopen, sayAfter, skip } from '@/lib/flow';
 import { speak } from '@/lib/speech';
-import { displayable } from '@/lib/validate';
+import { displayable, maskLongDigitRuns } from '@/lib/validate';
 import { useSession } from '@/state/SessionContext';
 import { colors, radius, space } from '@/theme';
 
@@ -46,12 +46,15 @@ export default function Ask() {
     setHeard(text);
     setBusy(true);
     try {
-      const res = await api.extract({
-        utterance: text,
-        procedure,
-        current: field,
-        others: remainingFields(procedure, session, field.key),
-      });
+      // Số căn cước / SĐT: code tự đổi, không gửi cho AI. Câu khác: che dãy số dài trước khi gửi.
+      const res =
+        localNumberTurn(field, text) ??
+        (await api.extract({
+          utterance: maskLongDigitRuns(text),
+          procedure,
+          current: field,
+          others: remainingFields(procedure, session, field.key),
+        }));
       const r = applyTurn(procedure, session, field, res, text);
       setReply(r.reply || null);
       spokenFor.current = r.next?.key ?? null; // câu hỏi kế đã nằm trong lời đọc dưới đây

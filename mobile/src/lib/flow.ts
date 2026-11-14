@@ -54,6 +54,17 @@ export function sayAfter(r: ApplyResult): string {
   return [r.reply, r.next?.question].filter(Boolean).join(' ').trim();
 }
 
+/**
+ * Đang hỏi số căn cước / số điện thoại mà câu nói có dãy số → code tự xử lý, KHÔNG gọi AI.
+ * Lợi: số định danh không đi qua AI (dữ liệu cá nhân), nhanh hơn ~1 giây, không bị AI đọc sai số.
+ * Trả null khi cần AI hiểu ý (vd "tôi không nhớ", "hả con nói gì").
+ */
+export function localNumberTurn(current: Field, utterance: string): ExtractResponse | null {
+  if (current.kind !== 'id12' && current.kind !== 'phone') return null;
+  const digits = digitsFromSpeech(utterance);
+  return digits ? { act: 'answer', values: [{ key: current.key, value: digits }], reply: '' } : null;
+}
+
 /** Áp kết quả AI vào phiên, kiểm tra hợp lệ, quyết định câu nói tiếp theo. */
 export function applyTurn(
   p: Procedure,
