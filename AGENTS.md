@@ -14,7 +14,14 @@ Monorepo gồm 2 phần độc lập:
 
 ## Lệnh kiểm tra trước khi xong việc
 ```bash
-cd mobile && npx tsc --noEmit && npx expo-doctor
+cd mobile && npm run check:data && npx tsc --noEmit && npx expo-doctor
 cd server && npx tsc --noEmit && npm run samples   # cần OPENAI_API_KEY trong .env.local
 ```
 Dùng `npx expo install <pkg>` để thêm thư viện cho mobile (không dùng `npm install`).
+Số căn cước / số điện thoại do code tự đổi từ câu nói (`digitsFromSpeech` trong `validate.ts`), không tin giá trị AI.
+
+## CI/CD (`.github/workflows/`)
+- `ci.yml`: mọi PR và push lên main → kiểm tra dữ liệu thủ tục, typecheck, expo-doctor, đóng gói thử bundle Android, typecheck server. PR chỉ gộp khi xanh.
+- `deploy-server.yml`: push lên main có sửa `server/` → deploy Vercel production rồi kiểm tra `/api/health` có key. Cần secret `VERCEL_TOKEN`.
+- `build-apk.yml`: bấm tay ở tab Actions → gửi lệnh build APK lên EAS. Cần secret `EXPO_TOKEN` và `extra.eas.projectId` trong `app.json`.
+- Commit/PR không thêm dòng `Co-Authored-By: Claude`.
