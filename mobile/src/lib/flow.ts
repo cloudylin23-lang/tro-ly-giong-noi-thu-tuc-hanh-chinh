@@ -9,9 +9,19 @@ export function newSession(procedureId: string): Session {
 
 const isDone = (s: Session, f: Field) => f.key in s.filled || s.skipped.includes(f.key);
 
-/** Các field cần hỏi với phiên này: bỏ field có điều kiện `when` chưa thoả (vd ở nhà mình thì không hỏi chủ nhà) */
+/**
+ * Các field cần hỏi với phiên này: bỏ field có điều kiện `when` chưa thoả (vd ở nhà mình thì không hỏi chủ nhà).
+ * Điều kiện lồng nhau: field cha cũng phải đang áp dụng. Bác sửa câu trả lời khiến field cha hết áp dụng
+ * thì giá trị cũ của nó (vẫn còn trong `filled`) KHÔNG được kéo theo các field con.
+ * (check-procedures.mjs bảo đảm field cha luôn đứng trước → duyệt một lượt là đủ.)
+ */
 export function activeFields(p: Procedure, s: Session): Field[] {
-  return p.fields.filter((f) => !f.when || f.when.in.includes(s.filled[f.when.field] ?? ''));
+  const active = new Set<string>();
+  return p.fields.filter((f) => {
+    const ok = !f.when || (active.has(f.when.field) && f.when.in.includes(s.filled[f.when.field] ?? ''));
+    if (ok) active.add(f.key);
+    return ok;
+  });
 }
 
 /** Field cần hỏi tiếp theo (theo thứ tự trong file cấu hình), undefined = xong */
