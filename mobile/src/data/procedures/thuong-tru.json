@@ -265,18 +265,19 @@
   ],
   "office": {
     "name": "Công an xã, phường nơi bác muốn đăng ký thường trú",
-    "address": "Ví dụ trong demo: Công an phường Khương Đình, Hà Nội",
+    "address": "Số 2 ngõ 320 Khương Đình, phường Khương Đình, Hà Nội (trụ sở sau sáp nhập 1/7/2025 — nên gọi xác nhận trước khi đến)",
     "hours": "Thứ Hai đến hết sáng thứ Bảy (trừ ngày lễ, Tết)",
     "processing": "Có kết quả trong 7 ngày làm việc sau khi nộp đủ hồ sơ",
     "fee": "20.000đ nộp trực tiếp · 10.000đ nộp qua Cổng Dịch vụ công · Miễn phí nếu nộp qua VNeID (đến hết 31/12/2026)",
     "note": "Bác có thể nhờ con cháu nộp online qua ứng dụng VNeID, hiện đang được miễn lệ phí.",
-    "mapsQuery": "Công an phường Khương Đình, Hà Nội"
+    "mapsQuery": "Số 2 ngõ 320 Khương Đình, Hà Nội"
   },
   "source": "Cổng Dịch vụ công Quốc gia, thủ tục Đăng ký thường trú (mã 1.004222); Luật Cư trú 2020 (Điều 20); Thông tư 116/2026/TT-BCA (Mẫu CT01, CT02, thay toàn bộ biểu mẫu cư trú từ 01/7/2026); Nghị định 58/2026/NĐ-CP (Mẫu số 01, 02 Phụ lục IV); Công an tỉnh An Giang về miễn lệ phí qua VNeID. Truy cập 14/11/2026.",
   "sourceUrls": [
     "https://congan.angiang.gov.vn/dang-ky-thuong-tru-theo-quy-dinh-moi-nguoi-dan-duoc-mien-le-phi-khi-thuc-hien-qua-vneid-den-het-nam-2026",
     "https://luatvietnam.vn/tin-van-ban-moi/tu-01-7-2026-thay-the-toan-bo-15-bieu-mau-dang-ky-quan-ly-cu-tru-186-110380-article.html",
     "https://congbao.chinhphu.vn/van-ban/thong-tu-so-116-2026-tt-bca-470078.htm",
-    "https://xdcs.cdnchinhphu.vn/446259493575335936/2026/2/24/58nd-signed-17719193053761644276754.pdf"
+    "https://xdcs.cdnchinhphu.vn/446259493575335936/2026/2/24/58nd-signed-17719193053761644276754.pdf",
+    "https://congtyluatacc.vn/dia-chi-tru-so-cong-an-phuong-khuong-dinh-o-ha-noi-moi/"
   ]
 }
