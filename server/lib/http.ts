@@ -1,3 +1,4 @@
+import { config } from './config.js';
 import { errorFields, log, newRequestId, withRequest } from './log.js';
 import { HttpError } from './openai.js';
 
@@ -47,7 +48,7 @@ export function handler(fn: (req: Request) => Promise<Response>) {
 }
 
 function checkToken(req: Request) {
-  const expected = process.env.APP_TOKEN;
+  const expected = config.appToken;
   if (!expected) return;
   if (req.headers.get('x-app-token') !== expected) throw new HttpError(401, 'Sai app token');
 }

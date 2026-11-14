@@ -1,31 +1,17 @@
 import OpenAI, { APIConnectionError, APIError } from 'openai';
+import { config, configProblems } from './config.js';
 import { errorFields, log } from './log.js';
+
+export { config } from './config.js';
 
 let client: OpenAI | null = null;
 
 export function openai(): OpenAI {
-  if (!process.env.OPENAI_API_KEY) throw new HttpError(500, 'Server chưa có OPENAI_API_KEY');
+  if (configProblems.length) throw new HttpError(500, `Server thiếu cấu hình: ${configProblems.join('; ')}`);
   // Không để SDK tự retry: việc thử lại / đổi model do withFallback quyết định
-  client ??= new OpenAI({ timeout: 20_000, maxRetries: 0 });
+  client ??= new OpenAI({ apiKey: config.openaiApiKey, timeout: 20_000, maxRetries: 0 });
   return client;
 }
-
-export const config = {
-  sttModel: process.env.OPENAI_STT_MODEL || 'gpt-4o-transcribe',
-  sttFallbackModel: process.env.OPENAI_STT_FALLBACK_MODEL || 'gpt-4o-mini-transcribe',
-  llmModel: process.env.OPENAI_MODEL || 'gpt-4.1-mini',
-  llmFallbackModel: process.env.OPENAI_FALLBACK_MODEL || 'gpt-4o-mini',
-  reasoningEffort: (process.env.OPENAI_REASONING_EFFORT || undefined) as
-    | 'none'
-    | 'minimal'
-    | 'low'
-    | undefined,
-  // Thời gian chờ mỗi lần gọi. Tổng primary + fallback phải < maxDuration trong vercel.json (30s).
-  llmTimeoutMs: 10_000,
-  llmFallbackTimeoutMs: 10_000,
-  sttTimeoutMs: 15_000,
-  sttFallbackTimeoutMs: 10_000,
-};
 
 export class HttpError extends Error {
   constructor(
