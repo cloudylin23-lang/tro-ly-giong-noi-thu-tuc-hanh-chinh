@@ -59,9 +59,14 @@ export interface ApplyResult {
   next: Field | undefined;
 }
 
+/** Câu hỏi kèm hướng dẫn cho mục không bắt buộc, dùng cả khi đọc và hiển thị. */
+export function questionText(field: Field): string {
+  return [field.question, field.optional ? copy.ask.optionalHint : ''].filter(Boolean).join(' ');
+}
+
 /** Câu app sẽ đọc: xác nhận + câu hỏi tiếp theo */
 export function sayAfter(r: ApplyResult): string {
-  return [r.reply, r.next?.question].filter(Boolean).join(' ').trim();
+  return [r.reply, r.next ? questionText(r.next) : ''].filter(Boolean).join(' ').trim();
 }
 
 /**
@@ -168,7 +173,9 @@ export function reopen(p: Procedure, s: Session, key: string): Session {
 export function summaryText(p: Procedure, s: Session): string {
   const lines = activeFields(p, s).map((f) => {
     const v = s.filled[f.key];
-    return v ? `${f.label}: ${speakable(f, v)}.` : `${f.label}: chưa có.`;
+    return v
+      ? `${f.label}: ${speakable(f, v)}.`
+      : `${f.label}: ${f.optional && s.skipped.includes(f.key) ? copy.ask.optionalEmpty : 'chưa có'}.`;
   });
   return lines.join(' ');
 }

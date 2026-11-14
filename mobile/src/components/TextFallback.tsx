@@ -1,19 +1,19 @@
 import { useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 import { copy } from '@/copy';
-import { colors, font, maxFontScale, radius, space, touch } from '@/theme';
+import { colors, font, fontFamily, maxFontScale, radius, space, touch } from '@/theme';
 import { BigButton } from './BigButton';
 
 /** Ô gõ chữ dự phòng khi ồn hoặc STT nghe sai. Mặc định thu gọn. */
-export function TextFallback({ onSubmit, disabled }: { onSubmit: (text: string) => void; disabled?: boolean }) {
+export function TextFallback({ onSubmit, disabled, compact = false }: { onSubmit: (text: string) => void; disabled?: boolean; compact?: boolean }) {
   const [open, setOpen] = useState(false);
   const [text, setText] = useState('');
 
-  if (!open) return <BigButton variant="ghost" label={`⌨️  ${copy.home.typeInstead}`} onPress={() => setOpen(true)} />;
+  if (!open) return <BigButton compact={compact} variant="ghost" icon="keyboard" label={copy.home.typeInstead} disabled={disabled} onPress={() => setOpen(true)} />;
 
   const send = () => {
     const t = text.trim();
-    if (!t || disabled) return; // Enter trên bàn phím không đi qua nút Gửi nên phải chặn ở đây
+    if (!t || disabled) return; // Enter không đi qua nút Gửi nên vẫn phải chặn tại đây.
     setText('');
     onSubmit(t);
   };
@@ -22,6 +22,7 @@ export function TextFallback({ onSubmit, disabled }: { onSubmit: (text: string) 
     <View style={styles.wrap}>
       <TextInput
         value={text}
+        editable={!disabled}
         onChangeText={setText}
         placeholder="Gõ câu trả lời…"
         placeholderTextColor={colors.textMuted}
@@ -33,7 +34,7 @@ export function TextFallback({ onSubmit, disabled }: { onSubmit: (text: string) 
         submitBehavior="submit"
         onSubmitEditing={send}
       />
-      <BigButton label="Gửi" onPress={send} disabled={disabled || !text.trim()} />
+      <BigButton compact={compact} label="Gửi" onPress={send} disabled={disabled || !text.trim()} />
     </View>
   );
 }
@@ -49,6 +50,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.md,
     paddingVertical: space.sm,
     fontSize: font.md,
+    fontFamily,
     color: colors.text,
   },
 });

@@ -16,6 +16,7 @@ export interface Field {
   kind: FieldKind;
   question: string; // câu app đọc để hỏi
   hint?: string; // gợi ý cho AI
+  optional?: boolean; // có thể chọn "Không có" mà không cần gọi AI
   options?: FieldOption[]; // bắt buộc khi kind=choice
   /** Chỉ hỏi field này khi field khác đã chọn một trong các giá trị */
   when?: { field: string; in: string[] };

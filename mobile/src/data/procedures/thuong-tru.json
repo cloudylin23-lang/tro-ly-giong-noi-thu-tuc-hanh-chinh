@@ -60,7 +60,8 @@
       "key": "email",
       "label": "Email",
       "kind": "email",
-      "question": "Bác có địa chỉ email không ạ? Không có thì bác nói không có nhé.",
+      "optional": true,
+      "question": "Bác có địa chỉ email không ạ?",
       "hint": "nếu người dùng nói không có / không dùng → act=dont_know"
     },
     {

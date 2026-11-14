@@ -19,7 +19,7 @@ export function ProgressBar({ current, total, done }: { current: number; total: 
 
 const styles = StyleSheet.create({
   wrap: { gap: space.xs },
-  label: { fontWeight: '700', color: colors.primary },
-  track: { height: 14, borderRadius: 7, backgroundColor: '#E4DED0', overflow: 'hidden' },
+  label: { fontWeight: '700', color: colors.text },
+  track: { height: 14, borderRadius: 7, backgroundColor: colors.primarySoft, overflow: 'hidden' },
   fill: { height: '100%', backgroundColor: colors.primary, borderRadius: 7 },
 });

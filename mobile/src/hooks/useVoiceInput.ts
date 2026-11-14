@@ -26,7 +26,7 @@ const PRESET: RecordingOptions = {
 
 export type VoiceState = 'idle' | 'recording' | 'transcribing';
 
-export function useVoiceInput(onText: (text: string) => void | Promise<void>) {
+export function useVoiceInput(onText: (text: string) => void | Promise<void>, contextKey?: string) {
   const recorder = useAudioRecorder(PRESET);
   const recState = useAudioRecorderState(recorder, 200);
   const [state, setState] = useState<VoiceState>('idle');
@@ -39,12 +39,13 @@ export function useVoiceInput(onText: (text: string) => void | Promise<void>) {
   const onTextRef = useRef(onText);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mounted = useRef(true);
+  const contextVersion = useRef(0);
   onTextRef.current = onText;
 
-  const set = (s: VoiceState) => {
+  const set = useCallback((s: VoiceState) => {
     stateRef.current = s;
     setState(s);
-  };
+  }, []);
 
   // Báo lỗi bằng chữ và đọc to: người lớn tuổi thường không nhìn màn hình lúc chờ
   const fail = (msg: string) => {
@@ -57,12 +58,21 @@ export function useVoiceInput(onText: (text: string) => void | Promise<void>) {
     setCanRetry(false);
   }, []);
 
+  // Câu hỏi đổi thì bỏ file/kết quả STT cũ, tránh áp câu trả lời vào trường kế tiếp.
+  useEffect(() => {
+    contextVersion.current++;
+    setError(null);
+    clearRetry();
+    if (stateRef.current === 'transcribing') set('idle');
+  }, [contextKey, clearRetry, set]);
+
   // Gửi file lên STT. Gọi khi state đã là 'transcribing'.
   const transcribe = useCallback(async (uri: string) => {
+    const version = contextVersion.current;
     lastUriRef.current = uri;
     try {
       const text = await api.stt(uri); // tự gửi lại 1 lần nếu lỗi mạng (lib/api.ts)
-      if (!mounted.current) return; // đã rời màn hình trong lúc chờ STT → bỏ kết quả
+      if (!mounted.current || version !== contextVersion.current) return;
       lastUriRef.current = null;
       set('idle');
       if (!text.trim()) {
@@ -71,7 +81,7 @@ export function useVoiceInput(onText: (text: string) => void | Promise<void>) {
       }
       await onTextRef.current(text);
     } catch (err) {
-      if (!mounted.current) return;
+      if (!mounted.current || version !== contextVersion.current) return;
       setCanRetry(isRetryable(err)); // còn file + lỗi đường truyền → cho bấm gửi lại, khỏi nói lại
       if (!isRetryable(err)) lastUriRef.current = null;
       fail(friendlyError(err));
