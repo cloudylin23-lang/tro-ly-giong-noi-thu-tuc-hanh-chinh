@@ -32,7 +32,8 @@
     "android:release": "expo run:android --variant release",
     "build:apk": "npx eas-cli@latest build -p android --profile preview",
     "typecheck": "tsc --noEmit",
-    "doctor": "npx expo-doctor"
+    "doctor": "npx expo-doctor",
+    "check:data": "node scripts/check-procedures.mjs"
   },
   "private": true
 }

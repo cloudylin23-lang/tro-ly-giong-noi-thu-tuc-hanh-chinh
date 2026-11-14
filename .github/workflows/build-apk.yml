@@ -1,0 +1,47 @@
+# Build APK (bản release, chạy độc lập không cần laptop) trên EAS — bấm tay ở tab Actions.
+# Cần 1 secret trên GitHub: EXPO_TOKEN (tạo ở https://expo.dev/settings/access-tokens),
+# và app.json phải có extra.eas.projectId (chạy `npx eas-cli@latest init` một lần trên máy).
+# Job chỉ gửi lệnh build rồi kết thúc; link tải APK xem ở https://expo.dev (mục Builds).
+name: Build APK (EAS)
+
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        description: Ghi chú cho bản build
+        required: false
+        default: ''
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - name: Có EXPO_TOKEN chưa?
+        working-directory: .
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "::error::Chưa có secret EXPO_TOKEN (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - run: npm ci
+      - name: Kiểm tra trước khi build
+        run: npm run check:data && npx tsc --noEmit
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - name: Gửi lệnh build APK
+        env:
+          MSG: ${{ inputs.message || github.sha }}
+        run: eas build --platform android --profile preview --non-interactive --no-wait --message "$MSG"
