@@ -138,8 +138,24 @@ Chạy `npm run samples` để so độ chính xác và độ trễ trước khi
 | Dữ liệu nháp 2 thủ tục | |
 | Phỏng vấn người dùng (docs/research) | |
 
-## Lưu ý dữ liệu
-- Dữ liệu thủ tục trong `src/data/procedures/` là **bản nháp**, phải đối chiếu với Cổng Dịch vụ công / VNeID hiện hành.
-- PDF là **bản mô phỏng nội dung** tờ khai, không phải biểu mẫu chính thức.
-- Demo chỉ dùng **thông tin giả**, không dùng số CCCD thật.
-- Server không lưu audio hay dữ liệu cá nhân (`store: false`). Phiên làm việc chỉ lưu trên máy người dùng.
+## Giới hạn của bản demo và việc cần làm nếu đi tiếp
+Bản demo **chỉ dùng thông tin giả**, không dùng số CCCD thật. Nhóm biết các rủi ro dưới đây và tạm chấp nhận chúng trong phạm vi hackathon.
+
+### 1. Xác thực
+- App gửi header `x-app-token`, server so với biến `APP_TOKEN` (`checkToken` trong `server/lib/http.ts`). Chuỗi này nằm trong APK, ai giải nén cũng đọc được, nên **không phải bí mật**. Nó chỉ chặn người lạ gọi thử API, không phải cơ chế bảo mật. Khi `APP_TOKEN` để trống, server không kiểm tra token. Hiện server trên Vercel chưa đặt biến này.
+- Trước khi mở cho nhiều người cần định danh người dùng thật: đăng nhập bằng OTP số điện thoại hoặc VNeID, token ngắn hạn cấp riêng cho từng người hoặc từng thiết bị, giới hạn số lượt gọi và hạn mức chi phí OpenAI theo từng người.
+
+### 2. Dữ liệu cá nhân
+- Họ tên, ngày sinh, số căn cước, số điện thoại, địa chỉ đi theo đường: **điện thoại → server Vercel (Singapore, `sin1`) → OpenAI (hạ tầng ở Mỹ)** để nhận dạng giọng nói và trích thông tin.
+- **Server của nhóm không lưu gì**: không có cơ sở dữ liệu, gọi LLM với `store: false`, log chỉ ghi độ dài và metadata, không ghi nội dung câu nói hay số căn cước. Phiên làm việc chỉ nằm trên điện thoại (AsyncStorage). Phía OpenAI có thể giữ dữ liệu API một thời gian theo chính sách của họ. Nhóm không kiểm soát việc đó.
+- Đây là dữ liệu cá nhân thuộc phạm vi **Luật Bảo vệ dữ liệu cá nhân số 91/2025/QH15** và **Nghị định 356/2025/NĐ-CP** (cùng hiệu lực từ 01/01/2026, thay Nghị định 13/2023/NĐ-CP). Gửi dữ liệu sang Singapore và Mỹ là **chuyển dữ liệu cá nhân ra nước ngoài**, phải lập hồ sơ đánh giá tác động gửi Bộ Công an.
+- Sản phẩm thật cần:
+  - xin đồng ý rõ ràng trước khi ghi âm;
+  - cân nhắc nhận dạng giọng nói đặt tại Việt Nam hoặc chạy ngay trên máy;
+  - bớt gửi số căn cước cho AI. Code đã tự đổi dãy số từ câu nói (`digitsFromSpeech`), nên khi đổi được đủ 12 số thì có thể bỏ hẳn bước gọi LLM cho mục này. Riêng bước nhận dạng giọng nói thì vẫn phải nghe con số, chỉ tránh được nếu chạy trên máy hoặc trong nước.
+
+### 3. Độ chính xác
+- AI có thể nghe nhầm. Các lớp giảm sai hiện có: code tự đổi dãy số và đọc lại từng chữ số, kiểm tra định dạng, đọc lại toàn bộ để người dùng bấm sửa.
+- Kiểm tra định dạng **không đảm bảo đúng nội dung**: đủ 12 số vẫn có thể sai 1 số. PDF là **bản nháp để chép hoặc đối chiếu**, mô phỏng nội dung tờ khai, không phải biểu mẫu chính thức hay hồ sơ nộp thẳng.
+- Dữ liệu thủ tục trong `mobile/src/data/procedures/` là bản nháp, phải đối chiếu với Cổng Dịch vụ công / VNeID hiện hành.
+- Hướng tiếp theo: bước xác nhận riêng cho số căn cước, đọc chậm từng cụm 3 số, cho sửa từng chữ số.
