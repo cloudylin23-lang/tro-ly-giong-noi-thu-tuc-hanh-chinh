@@ -4,7 +4,9 @@ let client: OpenAI | null = null;
 
 export function openai(): OpenAI {
   if (!process.env.OPENAI_API_KEY) throw new HttpError(500, 'Server chưa có OPENAI_API_KEY');
-  client ??= new OpenAI({ timeout: 20_000, maxRetries: 1 });
+  // Không retry và timeout ngắn hơn timeout của app (turn 15s, stt 25s):
+  // app bỏ cuộc rồi thì server chạy tiếp chỉ tốn tiền.
+  client ??= new OpenAI({ timeout: 12_000, maxRetries: 0 });
   return client;
 }
 
@@ -44,5 +46,12 @@ export async function structured<T>(opts: {
     },
     store: false,
   });
-  return JSON.parse(res.output_text) as T;
+  if (!res.output_text) {
+    throw new HttpError(502, `AI không trả kết quả (status: ${res.status ?? 'unknown'})`);
+  }
+  try {
+    return JSON.parse(res.output_text) as T;
+  } catch {
+    throw new HttpError(502, 'AI trả kết quả không đúng định dạng JSON');
+  }
 }

@@ -34,6 +34,7 @@ export function useVoiceInput(onText: (text: string) => void | Promise<void>) {
   const stateRef = useRef<VoiceState>('idle');
   const onTextRef = useRef(onText);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mounted = useRef(true);
   onTextRef.current = onText;
 
   const set = (s: VoiceState) => {
@@ -57,6 +58,7 @@ export function useVoiceInput(onText: (text: string) => void | Promise<void>) {
         return;
       }
       const text = await api.stt(uri);
+      if (!mounted.current) return; // đã rời màn hình trong lúc chờ STT → bỏ kết quả
       set('idle');
       if (!text.trim()) {
         setError(copy.mic.tooShort);
@@ -64,6 +66,7 @@ export function useVoiceInput(onText: (text: string) => void | Promise<void>) {
       }
       await onTextRef.current(text);
     } catch (err) {
+      if (!mounted.current) return;
       setError(friendlyError(err));
       set('idle');
     }
@@ -96,17 +99,18 @@ export function useVoiceInput(onText: (text: string) => void | Promise<void>) {
     else if (stateRef.current === 'idle') void start();
   }, [start, stop]);
 
-  // Rời màn hình khi đang ghi → dừng, không gửi
-  useEffect(
-    () => () => {
+  // Rời màn hình khi đang ghi → dừng, không gửi; đang chờ STT → bỏ kết quả
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
       if (timer.current) clearTimeout(timer.current);
       if (stateRef.current === 'recording') {
         stateRef.current = 'idle';
         recorder.stop().catch(() => {});
       }
-    },
-    [recorder],
-  );
+    };
+  }, [recorder]);
 
   return {
     state,

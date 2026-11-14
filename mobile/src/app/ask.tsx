@@ -72,6 +72,8 @@ export default function Ask() {
   if (!procedure || !session) return <Redirect href="/" />;
   if (!field) return <Screen>{null}</Screen>;
 
+  // Đang ghi âm / chờ STT cũng phải khoá: câu trả lời về sau sẽ được áp vào câu đang hỏi
+  const locked = busy || voice.state !== 'idle';
   const p = progress(procedure, session);
   const answered = activeFields(procedure, session).filter((f) => f.key in session.filled || session.skipped.includes(f.key));
 
@@ -105,11 +107,11 @@ export default function Ask() {
       ) : null}
       {voice.error ? <Bubble who="warning">{voice.error}</Bubble> : null}
 
-      <TextFallback onSubmit={handleText} disabled={busy} />
+      <TextFallback onSubmit={handleText} disabled={locked} />
       <BigButton
         variant="ghost"
         label={copy.ask.skip}
-        disabled={busy}
+        disabled={locked}
         onPress={() => {
           setReply(null);
           setSession(skip(session, field.key));
@@ -126,10 +128,10 @@ export default function Ask() {
                 key={f.key}
                 accessibilityRole="button"
                 accessibilityLabel={`Sửa ${f.label}`}
-                disabled={busy}
+                disabled={locked}
                 onPress={() => {
                   setReply(null);
-                  setSession(reopen(session, f.key));
+                  setSession(reopen(procedure, session, f.key));
                 }}
                 style={({ pressed }) => [styles.item, pressed && { opacity: 0.7 }]}
               >
