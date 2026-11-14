@@ -1,32 +1,51 @@
 {
   "id": "cap_lai_can_cuoc",
-  "name": "Cấp lại thẻ căn cước bị mất",
+  "name": "Cấp lại thẻ căn cước",
   "aliases": [
     "mất thẻ căn cước",
     "mất căn cước công dân",
     "làm lại CCCD",
     "làm lại chứng minh thư",
-    "cấp lại căn cước"
+    "cấp lại căn cước",
+    "thẻ căn cước bị hỏng"
   ],
-  "formTitle": "TỜ KHAI CĂN CƯỚC — nội dung: Cấp lại thẻ căn cước do bị mất",
+  "formTitle": "PHIẾU ĐỀ NGHỊ GIẢI QUYẾT THỦ TỤC VỀ CĂN CƯỚC (Mẫu DC02) — nội dung: Cấp lại thẻ căn cước",
   "fields": [
     { "key": "ho_ten", "label": "Họ, chữ đệm và tên", "kind": "text", "question": "Bác cho con biết họ và tên đầy đủ của bác ạ?", "hint": "tên người" },
     { "key": "ngay_sinh", "label": "Ngày, tháng, năm sinh", "kind": "date", "question": "Bác sinh ngày, tháng, năm nào ạ?" },
     { "key": "gioi_tinh", "label": "Giới tính", "kind": "gender", "question": "Bác là nam hay nữ ạ?" },
     { "key": "so_dinh_danh", "label": "Số định danh cá nhân (số căn cước cũ)", "kind": "id12", "question": "Bác có nhớ 12 số căn cước cũ không ạ? Nếu không nhớ bác cứ nói không nhớ nhé.", "hint": "12 chữ số" },
     { "key": "so_dien_thoai", "label": "Số điện thoại", "kind": "phone", "question": "Số điện thoại của bác là bao nhiêu ạ?" },
-    { "key": "noi_thuong_tru", "label": "Nơi thường trú", "kind": "text", "question": "Bác đăng ký thường trú ở địa chỉ nào ạ?", "hint": "ghi đủ số nhà, đường, phường/xã, tỉnh/thành phố" }
+    { "key": "noi_thuong_tru", "label": "Nơi thường trú", "kind": "text", "question": "Bác đăng ký thường trú ở địa chỉ nào ạ?", "hint": "ghi đủ số nhà, đường, phường/xã, tỉnh/thành phố" },
+    {
+      "key": "ly_do",
+      "label": "Lý do cấp lại",
+      "kind": "choice",
+      "question": "Thẻ căn cước của bác bị mất, hay bị hỏng không dùng được nữa ạ?",
+      "hint": "đánh rơi, bị trộm, không tìm thấy → mat; gãy, mờ chữ, hỏng chip → hong",
+      "options": [
+        { "value": "mat", "label": "Bị mất thẻ" },
+        { "value": "hong", "label": "Thẻ bị hỏng, không dùng được", "documents": ["Mang theo thẻ căn cước bị hỏng để nộp lại"] }
+      ]
+    }
   ],
   "documents": [
-    "Bác đến trực tiếp để chụp ảnh và lấy vân tay",
-    "Tờ khai căn cước — app đã điền sẵn thông tin",
-    "Mang theo giấy tờ có ảnh khác nếu có (giấy phép lái xe, hộ chiếu…) để đối chiếu"
+    "Phiếu đề nghị giải quyết thủ tục về căn cước (Mẫu DC02) — app đã chuẩn bị sẵn nội dung; nếu nộp online qua VNeID thì khai thẳng trên ứng dụng",
+    "Phiếu thu nhận thông tin căn cước (Mẫu CC01) — cán bộ in ra tại chỗ, bác kiểm tra rồi ký",
+    "Thường không phải chụp ảnh, lấy vân tay lại: công an dùng ảnh, vân tay, mống mắt đã thu lần gần nhất"
   ],
   "office": {
-    "name": "Công an phường / xã hoặc cơ quan quản lý căn cước nơi bác ở",
-    "address": "Ví dụ demo — CẦN CẬP NHẬT ĐỊA CHỈ THẬT",
-    "hours": "Giờ hành chính các ngày làm việc",
-    "note": "Có thể đặt lịch trước qua ứng dụng VNeID để đỡ phải chờ."
+    "name": "Cơ quan quản lý căn cước của Công an (công an phường, xã hoặc công an tỉnh, thành phố)",
+    "address": "Đặt lịch trước trên VNeID hoặc Cổng Dịch vụ công để chọn nơi làm gần nhất, không phụ thuộc nơi cư trú",
+    "hours": "Giờ hành chính, thứ Hai đến thứ Bảy (trừ ngày lễ, Tết)",
+    "processing": "Không quá 7 ngày làm việc. Nhận thẻ tại nơi làm hoặc qua bưu điện",
+    "fee": "Người cao tuổi được MIỄN lệ phí. Người khác: 70.000đ/thẻ, đang giảm 50% (35.000đ) đến hết 31/12/2026",
+    "note": "Từ 15/3/2026 có thể gửi đề nghị cấp lại online trên VNeID, rồi đến đúng lịch hẹn để hoàn tất."
   },
-  "source": "BẢN NHÁP — đối chiếu lại với Luật Căn cước 2023 và Cổng DVC trước khi demo"
+  "source": "Công an tỉnh Khánh Hoà, thủ tục Cấp lại thẻ căn cước (căn cứ Luật Căn cước 2023, Nghị định 70/2024/NĐ-CP, Thông tư 17/2024/TT-BCA, Thông tư 73/2024/TT-BTC, Thông tư 64/2025/TT-BTC); Nghị định 58/2026/NĐ-CP về cấp lại trực tuyến từ 15/3/2026 (qua LuatVietnam, Báo Thanh Niên). Truy cập 13/11/2026.",
+  "sourceUrls": [
+    "https://congan.khanhhoa.gov.vn/FileStorage/images/CCHC/TTHC/CC/3_%20C%C4%83n%20c%C6%B0%E1%BB%9Bc.docx",
+    "https://luatvietnam.vn/hanh-chinh/huong-dan-lam-thu-tuc-cap-cap-doi-cap-lai-the-can-cuoc-qua-vneid-tu-15-3-2026-570-107698-article.html",
+    "https://thanhnien.vn/quy-dinh-moi-ve-cap-lai-the-can-cuoc-ap-dung-tu-ngay-153-185260225152647494.htm"
+  ]
 }

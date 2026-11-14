@@ -9,18 +9,32 @@ export function newSession(procedureId: string): Session {
 
 const isDone = (s: Session, f: Field) => f.key in s.filled || s.skipped.includes(f.key);
 
+/** Các field cần hỏi với phiên này: bỏ field có điều kiện `when` chưa thoả (vd ở nhà mình thì không hỏi chủ nhà) */
+export function activeFields(p: Procedure, s: Session): Field[] {
+  return p.fields.filter((f) => !f.when || f.when.in.includes(s.filled[f.when.field] ?? ''));
+}
+
 /** Field cần hỏi tiếp theo (theo thứ tự trong file cấu hình), undefined = xong */
 export function nextField(p: Procedure, s: Session): Field | undefined {
-  return p.fields.find((f) => !isDone(s, f));
+  return activeFields(p, s).find((f) => !isDone(s, f));
 }
 
 export function remainingFields(p: Procedure, s: Session, exceptKey?: string): Field[] {
-  return p.fields.filter((f) => !isDone(s, f) && f.key !== exceptKey);
+  return activeFields(p, s).filter((f) => !isDone(s, f) && f.key !== exceptKey);
 }
 
 export function progress(p: Procedure, s: Session) {
-  const done = p.fields.filter((f) => isDone(s, f)).length;
-  return { current: Math.min(done + 1, p.fields.length), total: p.fields.length, done };
+  const fields = activeFields(p, s);
+  const done = fields.filter((f) => isDone(s, f)).length;
+  return { current: Math.min(done + 1, fields.length), total: fields.length, done };
+}
+
+/** Giấy tờ chung + giấy tờ riêng theo trường hợp bác đã chọn */
+export function documentsFor(p: Procedure, s: Session): string[] {
+  const extra = activeFields(p, s).flatMap((f) =>
+    f.kind === 'choice' ? (f.options?.find((o) => o.value === s.filled[f.key])?.documents ?? []) : [],
+  );
+  return [...p.documents, ...extra];
 }
 
 export function isComplete(p: Procedure, s: Session) {
@@ -50,7 +64,7 @@ export function applyTurn(p: Procedure, s: Session, current: Field, res: Extract
     for (const { key, value } of res.values) {
       const field = p.fields.find((f) => f.key === key);
       if (!field) continue;
-      const c = check(field.kind, value);
+      const c = check(field, value);
       if (c.ok) {
         session.filled[key] = c.value;
         session.skipped = session.skipped.filter((k) => k !== key);
@@ -91,9 +105,9 @@ export function reopen(s: Session, key: string): Session {
 
 /** Bản tóm tắt để đọc to ở màn kết quả */
 export function summaryText(p: Procedure, s: Session): string {
-  const lines = p.fields.map((f) => {
+  const lines = activeFields(p, s).map((f) => {
     const v = s.filled[f.key];
-    return v ? `${f.label}: ${speakable(f.kind, v)}.` : `${f.label}: chưa có.`;
+    return v ? `${f.label}: ${speakable(f, v)}.` : `${f.label}: chưa có.`;
   });
   return lines.join(' ');
 }

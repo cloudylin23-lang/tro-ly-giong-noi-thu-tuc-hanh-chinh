@@ -10,7 +10,7 @@ if (existsSync('.env.local')) process.loadEnvFile('.env.local');
 // Dùng chính dữ liệu thủ tục của app để test sát thực tế
 const load = (name: string) =>
   JSON.parse(readFileSync(new URL(`../../mobile/src/data/procedures/${name}.json`, import.meta.url), 'utf8'));
-const procedures = [load('tam-tru'), load('cap-lai-can-cuoc')] as (ProcedureBrief & { fields: FieldSpec[] })[];
+const procedures = [load('tam-tru'), load('thuong-tru'), load('cap-lai-can-cuoc')] as (ProcedureBrief & { fields: FieldSpec[] })[];
 const tamTru = procedures[0];
 
 const samples = JSON.parse(readFileSync(new URL('./samples.json', import.meta.url), 'utf8')) as {

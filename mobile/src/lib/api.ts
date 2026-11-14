@@ -53,7 +53,13 @@ async function request<T>(path: string, init: RequestInit, timeoutMs: number): P
   return data as T;
 }
 
-const toSpec = ({ key, label, kind, hint }: Field): FieldSpec => ({ key, label, kind, hint });
+const toSpec = ({ key, label, kind, hint, options }: Field): FieldSpec => ({
+  key,
+  label,
+  kind,
+  hint,
+  options: options?.map(({ value, label: l }) => ({ value, label: l })),
+});
 
 export const api = {
   health() {

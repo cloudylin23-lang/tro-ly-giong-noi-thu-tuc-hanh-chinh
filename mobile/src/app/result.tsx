@@ -7,7 +7,7 @@ import { BigButton } from '@/components/BigButton';
 import { Screen } from '@/components/Screen';
 import { copy } from '@/copy';
 import { getProcedure } from '@/data/procedures';
-import { reopen, summaryText } from '@/lib/flow';
+import { activeFields, documentsFor, reopen, summaryText } from '@/lib/flow';
 import { shareFormPdf } from '@/lib/pdf';
 import { speak } from '@/lib/speech';
 import { displayable } from '@/lib/validate';
@@ -60,7 +60,7 @@ export default function Result() {
       <AppText variant="muted">{procedure.name}</AppText>
 
       <View style={styles.card}>
-        {procedure.fields.map((f) => {
+        {activeFields(procedure, session).map((f) => {
           const v = session.filled[f.key];
           return (
             <View key={f.key} style={styles.row}>
@@ -73,7 +73,7 @@ export default function Result() {
                   router.replace('/ask');
                 }}
               >
-                {v ? displayable(f.kind, v) : 'Chưa có — bấm để bổ sung'}
+                {v ? displayable(f, v) : 'Chưa có — bấm để bổ sung'}
               </AppText>
             </View>
           );
@@ -82,7 +82,7 @@ export default function Result() {
 
       <AppText variant="title">{copy.result.docsTitle}</AppText>
       <View style={styles.card}>
-        {procedure.documents.map((d) => (
+        {documentsFor(procedure, session).map((d) => (
           <AppText key={d}>☐ {d}</AppText>
         ))}
       </View>
@@ -91,7 +91,9 @@ export default function Result() {
       <View style={[styles.card, { backgroundColor: colors.successBg }]}>
         <AppText style={styles.value}>{procedure.office.name}</AppText>
         <AppText>{procedure.office.address}</AppText>
-        <AppText variant="muted">{procedure.office.hours}</AppText>
+        <AppText variant="muted">🕗 {procedure.office.hours}</AppText>
+        {procedure.office.processing ? <AppText variant="muted">⏳ {procedure.office.processing}</AppText> : null}
+        {procedure.office.fee ? <AppText variant="muted">💵 {procedure.office.fee}</AppText> : null}
         {procedure.office.note ? <AppText variant="muted">{procedure.office.note}</AppText> : null}
       </View>
 

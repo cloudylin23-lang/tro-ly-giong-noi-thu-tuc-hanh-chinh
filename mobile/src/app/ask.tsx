@@ -13,7 +13,7 @@ import { copy } from '@/copy';
 import { getProcedure } from '@/data/procedures';
 import { useVoiceInput } from '@/hooks/useVoiceInput';
 import { api, friendlyError } from '@/lib/api';
-import { applyTurn, nextField, progress, remainingFields, reopen, sayAfter, skip } from '@/lib/flow';
+import { activeFields, applyTurn, nextField, progress, remainingFields, reopen, sayAfter, skip } from '@/lib/flow';
 import { speak } from '@/lib/speech';
 import { displayable } from '@/lib/validate';
 import { useSession } from '@/state/SessionContext';
@@ -73,7 +73,7 @@ export default function Ask() {
   if (!field) return <Screen>{null}</Screen>;
 
   const p = progress(procedure, session);
-  const answered = procedure.fields.filter((f) => f.key in session.filled || session.skipped.includes(f.key));
+  const answered = activeFields(procedure, session).filter((f) => f.key in session.filled || session.skipped.includes(f.key));
 
   return (
     <Screen
@@ -134,7 +134,7 @@ export default function Ask() {
                 style={({ pressed }) => [styles.item, pressed && { opacity: 0.7 }]}
               >
                 <AppText variant="muted">{f.label}</AppText>
-                <AppText style={styles.value}>{v ? displayable(f.kind, v) : copy.ask.skippedValue}</AppText>
+                <AppText style={styles.value}>{v ? displayable(f, v) : copy.ask.skippedValue}</AppText>
               </Pressable>
             );
           })}
