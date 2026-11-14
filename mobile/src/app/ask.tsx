@@ -11,6 +11,8 @@ import { MicButton } from '@/components/MicButton';
 import { ProgressBar } from '@/components/ProgressBar';
 import { Screen } from '@/components/Screen';
 import { TextFallback } from '@/components/TextFallback';
+import { WebBackground } from '@/components/WebBackground';
+import { AppHeader } from '@/components/AppHeader';
 import { copy } from '@/copy';
 import { getProcedure } from '@/data/procedures';
 import { useVoiceInput } from '@/hooks/useVoiceInput';
@@ -155,7 +157,7 @@ export default function Ask() {
   );
 
   if (!procedure || !session) return <Redirect href="/" />;
-  if (!field) return <Screen footer={cancelControl}>{null}</Screen>;
+  if (!field) return <Screen subtitle={procedure.name} footer={cancelControl}>{null}</Screen>;
 
   const p = progress(procedure, session);
   const inputDisabled = busy || voice.state !== 'idle';
@@ -171,10 +173,11 @@ export default function Ask() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+      <WebBackground />
+      <AppHeader subtitle={procedure.name} />
       <ScrollView ref={scroll} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.sheet}>
           <View style={styles.header}>
-            <AppText variant="title" style={styles.title}>{procedure.name}</AppText>
             <View style={styles.progress}>
               <ProgressBar {...p} />
             </View>
@@ -192,7 +195,7 @@ export default function Ask() {
               </AppText>
             ) : null}
             <Bubble onPress={inputDisabled ? undefined : () => void speak(questionText(field))}>{questionText(field)}</Bubble>
-            <AppText variant="muted">{copy.ask.autoNextHint}</AppText>
+            {choices.length === 0 ? <AppText variant="muted">{copy.ask.autoNextHint}</AppText> : null}
             {field.optional ? (
               <BigButton variant="secondary" label={copy.ask.none} disabled={inputDisabled} onPress={skipOptional} />
             ) : null}
@@ -258,18 +261,24 @@ export default function Ask() {
               }}
               disabled={inputDisabled}
             />
-            {!field.optional ? (
-              <BigButton
-                variant="ghost"
-                label={copy.ask.skip}
-                disabled={inputDisabled}
-                onPress={() => {
-                  setReply(null);
-                  setSession(skip(session, field.key));
-                }}
-              />
-            ) : null}
-            <BigButton variant="secondary" icon="repeat" label={copy.ask.repeatQuestion} disabled={inputDisabled} onPress={() => void speak(questionText(field))} />
+            <View style={styles.actions}>
+              {!field.optional ? (
+                <View style={styles.action}>
+                  <BigButton
+                    variant="ghost"
+                    label={copy.ask.skip}
+                    disabled={inputDisabled}
+                    onPress={() => {
+                      setReply(null);
+                      setSession(skip(session, field.key));
+                    }}
+                  />
+                </View>
+              ) : null}
+              <View style={styles.action}>
+                <BigButton variant="secondary" icon="repeat" label={copy.ask.repeatQuestion} disabled={inputDisabled} onPress={() => void speak(questionText(field))} />
+              </View>
+            </View>
           </View>
 
           {answered.length > 0 ? (
@@ -307,34 +316,35 @@ export default function Ask() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
-  footer: { paddingHorizontal: space.sm, paddingBottom: space.sm },
-  footerContent: { width: '100%', maxWidth: layout.pageWidth, alignSelf: 'center' },
+  footer: { paddingHorizontal: '2%', paddingBottom: space.sm },
+  footerContent: { width: '100%', maxWidth: layout.pageWidth, alignSelf: 'center', backgroundColor: 'transparent' },
   content: {
     flexGrow: 1,
     alignItems: 'center',
-    paddingHorizontal: space.sm,
-    paddingTop: space.lg,
+    paddingHorizontal: '2%',
+    paddingTop: space.sm,
     paddingBottom: space.sm,
   },
   sheet: {
     flexGrow: 1,
     width: '100%',
     maxWidth: layout.pageWidth,
-    backgroundColor: colors.surface,
+    backgroundColor: 'transparent',
     borderRadius: space.xl,
     paddingHorizontal: space.md,
-    paddingVertical: space.lg,
-    gap: space.xl,
+    paddingVertical: space.sm,
+    gap: space.md,
   },
   header: { gap: space.lg },
-  title: { textAlign: 'center' },
   progress: {
     borderRadius: radius,
     borderWidth: 1,
     borderColor: colors.border,
-    padding: space.md,
+    padding: space.xs,
   },
-  section: { gap: space.md },
+  section: { gap: space.sm },
+  actions: { flexDirection: 'row', gap: space.sm },
+  action: { flex: 1 },
   fieldHeader: { gap: space.sm, alignItems: 'flex-start' },
   optional: { backgroundColor: colors.primarySoft, borderRadius: space.sm, paddingHorizontal: space.sm, paddingVertical: space.xs },
   choices: { gap: space.sm },
@@ -342,7 +352,7 @@ const styles = StyleSheet.create({
   filled: { gap: space.sm, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: space.lg },
   item: {
     minHeight: touch,
-    backgroundColor: colors.surface,
+    backgroundColor: 'transparent',
     borderRadius: radius,
     borderWidth: 1,
     borderColor: colors.border,

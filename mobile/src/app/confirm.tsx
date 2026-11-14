@@ -6,6 +6,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppText } from '@/components/AppText';
 import { BigButton } from '@/components/BigButton';
 import { CancelProcedure } from '@/components/CancelProcedure';
+import { WebBackground } from '@/components/WebBackground';
+import { AppHeader } from '@/components/AppHeader';
 import { copy } from '@/copy';
 import { getProcedure } from '@/data/procedures';
 import { newSession } from '@/lib/flow';
@@ -39,6 +41,8 @@ export default function Confirm() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+      <WebBackground />
+      <AppHeader subtitle={copy.header.confirm} />
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.sheet}>
           <View accessible={false} style={styles.badge}>
@@ -84,14 +88,14 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'flex-end',
     alignItems: 'center',
-    paddingTop: 140,
-    paddingHorizontal: space.sm,
+    paddingTop: space.lg,
+    paddingHorizontal: '2%',
     paddingBottom: space.sm,
   },
   sheet: {
     width: '100%',
     maxWidth: layout.pageWidth,
-    backgroundColor: colors.surface,
+    backgroundColor: 'transparent',
     borderRadius: space.xl,
     paddingHorizontal: space.lg,
     paddingVertical: space.xl,
@@ -102,7 +106,7 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 30,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: space.xs,
@@ -112,7 +116,7 @@ const styles = StyleSheet.create({
     width: 88,
     height: 88,
     borderRadius: 28,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.accent,
     transform: [{ rotate: '45deg' }],
   },
   check: {

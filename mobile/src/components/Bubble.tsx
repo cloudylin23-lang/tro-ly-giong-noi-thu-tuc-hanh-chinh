@@ -31,7 +31,7 @@ export function Bubble({
 
 const styles = StyleSheet.create({
   base: { borderRadius: radius, padding: space.md },
-  assistant: { backgroundColor: colors.surface, borderWidth: 2, borderColor: colors.border },
-  user: { backgroundColor: colors.primarySoft, alignSelf: 'stretch' },
-  warning: { backgroundColor: colors.warningBg, borderLeftWidth: 4, borderLeftColor: colors.danger },
+  assistant: { backgroundColor: 'transparent', borderWidth: 2, borderColor: colors.border },
+  user: { backgroundColor: 'transparent', alignSelf: 'stretch', borderWidth: 1, borderColor: colors.border },
+  warning: { backgroundColor: 'transparent', borderLeftWidth: 4, borderLeftColor: colors.danger },
 });

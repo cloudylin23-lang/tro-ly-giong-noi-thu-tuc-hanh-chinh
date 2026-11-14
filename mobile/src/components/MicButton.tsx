@@ -34,14 +34,16 @@ export function MicButton({
   onPress,
   durationMs,
   appearance = 'recorder',
+  scale = 1,
 }: {
   state: VoiceState;
   busy?: boolean; // AI đang xử lý
   onPress: () => void;
   durationMs?: number;
   appearance?: 'compact' | 'recorder';
+  scale?: number;
 }) {
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const pulse = useRef(new Animated.Value(0)).current;
   const recording = state === 'recording';
   const working = state === 'transcribing' || busy;
@@ -68,7 +70,8 @@ export function MicButton({
         : copy.mic.idle;
 
   if (appearance === 'recorder') {
-    const diameter = Math.min(recorderDesign.diameter, Math.max(0, width - space.lg * 2));
+    const preferredDiameter = height <= recorderDesign.compactHeight ? recorderDesign.compactDiameter : recorderDesign.diameter;
+    const diameter = Math.min(preferredDiameter * scale, Math.max(0, width - space.lg * 2));
     const buttonSize = diameter * recorderDesign.buttonRatio;
     const seconds = Math.floor(Math.max(0, durationMs ?? 0) / 1000);
     const time = [Math.floor(seconds / 3600), Math.floor(seconds / 60) % 60, seconds % 60]
@@ -108,8 +111,10 @@ export function MicButton({
           </Pressable>
         </View>
 
-        <AppText style={styles.time} accessibilityLabel={`${copy.mic.durationLabel}: ${time}`}>{time}</AppText>
-        <AppText style={styles.label} accessibilityLiveRegion="polite">{status}</AppText>
+        <View style={styles.recorderMeta}>
+          <AppText style={styles.time} accessibilityLabel={`${copy.mic.durationLabel}: ${time}`}>{time}</AppText>
+          <AppText style={styles.label} accessibilityLiveRegion="polite">{status}</AppText>
+        </View>
       </View>
     );
   }
@@ -156,15 +161,16 @@ export function MicButton({
 }
 
 const styles = StyleSheet.create({
-  recorder: { alignItems: 'center', gap: space.md, paddingVertical: space.sm },
-  outerHalo: { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primarySoft },
-  innerHalo: { position: 'absolute', backgroundColor: colors.primary },
+  recorder: { alignItems: 'center', gap: space.sm, paddingVertical: space.xs },
+  recorderMeta: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: space.sm },
+  outerHalo: { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.recordHaloSoft },
+  innerHalo: { position: 'absolute', backgroundColor: colors.recordHalo },
   recorderButton: { alignItems: 'center', justifyContent: 'center' },
   capsule: { position: 'absolute', borderColor: colors.onRecord },
   cradle: { position: 'absolute', borderColor: colors.onRecord },
   iconLine: { position: 'absolute', backgroundColor: colors.onRecord },
-  stopIcon: { width: 48, height: 48, borderRadius: 6, backgroundColor: colors.onRecord },
-  time: { fontSize: font.lg, lineHeight: font.lg * 1.4, fontVariant: ['tabular-nums'], color: colors.text },
+  stopIcon: { width: 32, height: 32, borderRadius: 6, backgroundColor: colors.onRecord },
+  time: { fontSize: font.sm, lineHeight: font.sm * 1.4, fontVariant: ['tabular-nums'], color: colors.text },
   wrap: { alignItems: 'center', gap: space.md, paddingVertical: space.md },
   circleWrap: { width: SIZE * 1.5, height: SIZE * 1.5, alignItems: 'center', justifyContent: 'center' },
   ring: {

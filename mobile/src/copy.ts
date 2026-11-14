@@ -4,6 +4,12 @@
 export const copy = {
   appName: 'Trợ lý thủ tục',
 
+  header: {
+    confirm: 'Xác nhận thủ tục bác muốn làm',
+    result: 'Kiểm tra thông tin hồ sơ',
+    check: 'Kiểm tra hệ thống',
+  },
+
   cancel: {
     label: 'Hủy thủ tục',
     title: 'Bác muốn hủy thủ tục này ạ?',
@@ -37,8 +43,8 @@ export const copy = {
   confirm: {
     replayHint: 'Bấm vào khung chữ để nghe lại',
     ask: 'Đúng không ạ?',
-    yes: 'Đúng',
-    no: 'Không phải',
+    yes: 'Đúng, bắt đầu',
+    no: 'Không phải, chọn lại',
     retry: 'Bác nói lại giúp con điều bác cần nhé.',
     notFound: 'Con chưa rõ bác cần làm thủ tục gì, bác nói lại giúp con nhé.',
   },
@@ -72,7 +78,12 @@ export const copy = {
 
   result: {
     title: 'Xong rồi bác ạ!',
-    intro: (name: string) => `Con đã điền xong tờ khai ${name}. Con đọc lại để bác kiểm tra nhé.`,
+    intro: (name: string) => `Con đọc lại thông tin tờ khai ${name} để bác kiểm tra nhé.`,
+    reviewTitle: 'Bác bổ sung thông tin nhé',
+    infoTitle: 'Thông tin bác đã điền',
+    editHint: 'Bác bấm vào thông tin bên dưới để sửa hoặc bổ sung.',
+    notSubmitted: 'Đây là bản khai để bác kiểm tra, hồ sơ chưa được nộp đến cơ quan tiếp nhận.',
+    missingCount: (count: number) => `Còn ${count} mục cần bổ sung. Bác bấm vào mục chưa có thông tin để điền tiếp nhé.`,
     replay: 'Nghe lại',
     pdf: 'Xem / gửi tờ khai PDF',
     docsTitle: 'Giấy tờ cần mang',

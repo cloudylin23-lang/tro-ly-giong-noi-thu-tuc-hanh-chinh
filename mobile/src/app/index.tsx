@@ -91,37 +91,31 @@ export default function Home() {
   );
 
   const resumeProcedure = session ? getProcedure(session.procedureId) : undefined;
-  const canResume = Boolean(resumeProcedure && session && Object.keys(session.filled).length > 0);
+  const canResume = Boolean(resumeProcedure && session && (Object.keys(session.filled).length > 0 || session.skipped.length > 0));
   const error = voice.error;
   const inputDisabled = !hydrated || busy || voice.state !== 'idle';
 
   return (
     <Screen
+      subtitle={copy.home.title}
       footer={
         <View style={styles.footer}>
           {canResume && resumeProcedure && session ? (
             <BigButton
+              compact
               variant="secondary"
               icon="return"
               label={`${copy.home.resume}: ${resumeProcedure.name}`}
               onPress={() => router.push(isComplete(resumeProcedure, session) ? '/result' : '/ask')}
             />
           ) : null}
-          <BigButton variant="ghost" label={copy.home.check} onPress={() => router.push('/check')} />
+          <BigButton compact variant="ghost" label={copy.home.check} onPress={() => router.push('/check')} />
         </View>
       }
     >
       <View style={styles.page}>
-        <View style={styles.header}>
-          <AppText variant="title" style={styles.app}>
-            {copy.appName}
-          </AppText>
-          <AppText variant="muted" style={styles.center}>
-            {copy.home.title}
-          </AppText>
-        </View>
-
         <MicButton
+          scale={0.88}
           appearance="recorder"
           state={voice.state}
           busy={busy}
@@ -140,8 +134,10 @@ export default function Home() {
           <AppText style={styles.sectionTitle}>{copy.home.chooseProcedure}</AppText>
           {procedures.map((procedure) => (
             <BigButton
+              compact
               key={procedure.id}
               variant="secondary"
+              icon={procedure.id === 'tam_tru' || procedure.id === 'thuong_tru' ? 'home' : procedure.id === 'cap_lai_can_cuoc' ? 'idCard' : 'file'}
               label={procedure.name}
               disabled={inputDisabled}
               onPress={() => chooseProcedure(procedure.id)}
@@ -157,12 +153,13 @@ export default function Home() {
         ) : null}
         {message || error ? <Bubble who="warning">{message ?? error ?? ''}</Bubble> : null}
         {retryText !== null ? (
-          <BigButton label={copy.errors.retry} disabled={inputDisabled} onPress={() => void handleText(retryText)} />
+          <BigButton compact label={copy.errors.retry} disabled={inputDisabled} onPress={() => void handleText(retryText)} />
         ) : voice.canRetry ? (
-          <BigButton label={copy.errors.retry} disabled={inputDisabled} onPress={() => void voice.retry()} />
+          <BigButton compact label={copy.errors.retry} disabled={inputDisabled} onPress={() => void voice.retry()} />
         ) : null}
 
         <TextFallback
+          compact
           onSubmit={(text) => {
             if (!inputDisabled) void handleText(text);
           }}
@@ -174,11 +171,9 @@ export default function Home() {
 }
 
 const styles = StyleSheet.create({
-  page: { width: '100%', maxWidth: recorderDesign.pageWidth, alignSelf: 'center', gap: space.lg },
+  page: { width: '100%', maxWidth: recorderDesign.pageWidth, alignSelf: 'center', gap: space.sm },
   footer: { width: '100%', maxWidth: recorderDesign.pageWidth, alignSelf: 'center', gap: space.sm },
-  header: { gap: space.sm, alignItems: 'center', marginTop: space.sm },
-  app: { fontWeight: '600', color: colors.text, textAlign: 'center' },
   center: { textAlign: 'center' },
   sectionTitle: { fontWeight: '700', textAlign: 'center' },
-  procedures: { gap: space.sm, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: space.lg },
+  procedures: { gap: space.xs, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: space.sm },
 });

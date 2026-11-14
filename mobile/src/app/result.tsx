@@ -39,6 +39,8 @@ export default function Result() {
   const items = documentsFor(procedure, session);
   const isNote = (text: string) => /^(?:Lưu ý\s*:|Thường không phải chụp ảnh)/iu.test(text.trim());
   const documents = items.filter((text) => !isNote(text));
+  const fields = activeFields(procedure, session);
+  const missingCount = fields.filter((field) => !field.optional && !session.filled[field.key]).length;
   const notes = [
     ...items.filter(isNote).map((text) => text.replace(/^\s*Lưu ý\s*:\s*/iu, '')),
     ...(procedure.office.note ? [procedure.office.note] : []),
@@ -57,6 +59,7 @@ export default function Result() {
 
   return (
     <Screen
+      subtitle={copy.header.result}
       footer={
         <>
           <BigButton variant="important" icon="file" label={making ? 'Đang tạo PDF…' : copy.result.pdf} onPress={pdf} disabled={making} />
@@ -65,13 +68,18 @@ export default function Result() {
       }
     >
       <View style={styles.heading}>
-        <Icon name="check" size={32} />
-        <AppText variant="hero" style={styles.listText}>{copy.result.title}</AppText>
+        <Icon name={missingCount > 0 ? 'warning' : 'check'} size={32} color={missingCount > 0 ? colors.danger : colors.text} />
+        <AppText variant="hero" style={styles.listText}>{missingCount > 0 ? copy.result.reviewTitle : copy.result.title}</AppText>
       </View>
       <AppText variant="muted">{procedure.name}</AppText>
+      <AppText variant="muted">{copy.result.notSubmitted}</AppText>
+
+      <AppText variant="title">{copy.result.infoTitle}</AppText>
+      <AppText variant="muted">{copy.result.editHint}</AppText>
+      {missingCount > 0 ? <AppText>{copy.result.missingCount(missingCount)}</AppText> : null}
 
       <View style={styles.card}>
-        {activeFields(procedure, session).map((f) => {
+        {fields.map((f) => {
           const v = session.filled[f.key];
           return (
             <Pressable
@@ -117,7 +125,7 @@ export default function Result() {
       ) : null}
 
       <AppText variant="title">{copy.result.officeTitle}</AppText>
-      <View style={[styles.card, { backgroundColor: colors.successBg }]}>
+      <View style={styles.card}>
         <AppText style={styles.value}>{procedure.office.name}</AppText>
         <AppText>{procedure.office.address}</AppText>
         <OfficeLine icon="clock" text={procedure.office.hours} />
@@ -148,7 +156,7 @@ function OfficeLine({ icon, text }: { icon: IconName; text: string }) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.surface,
+    backgroundColor: 'transparent',
     borderRadius: radius,
     borderWidth: 1,
     borderColor: colors.border,
@@ -160,6 +168,6 @@ const styles = StyleSheet.create({
   listItem: { flexDirection: 'row', alignItems: 'flex-start', gap: space.sm },
   marker: { minWidth: space.lg, fontWeight: '700' },
   listText: { flex: 1 },
-  notes: { backgroundColor: colors.primarySoft },
+  notes: { borderColor: colors.primaryPressed },
   value: { fontWeight: '700' },
 });

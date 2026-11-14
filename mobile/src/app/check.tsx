@@ -8,6 +8,7 @@ import { BigButton } from '@/components/BigButton';
 import { Icon } from '@/components/Icon';
 import { MicButton } from '@/components/MicButton';
 import { Screen } from '@/components/Screen';
+import { copy } from '@/copy';
 import { useVoiceInput } from '@/hooks/useVoiceInput';
 import { api, apiBaseUrl, friendlyError } from '@/lib/api';
 import { findVietnameseVoice, speak } from '@/lib/speech';
@@ -52,8 +53,8 @@ export default function Check() {
   }, [mic.error]);
 
   return (
-    <Screen footer={<BigButton variant="secondary" label="Về màn hình chính" onPress={() => router.back()} />}>
-      <AppText variant="title">Kiểm tra hệ thống</AppText>
+    <Screen subtitle={copy.header.check} footer={<View style={styles.inset}><BigButton variant="secondary" label="Về màn hình chính" onPress={() => router.back()} /></View>}>
+      <View style={[styles.inset, styles.content]}>
       <AppText variant="muted">
         Máy chủ: {apiBaseUrl || '(chưa cấu hình)'} · Bản {Constants.expoConfig?.version ?? '?'}
       </AppText>
@@ -66,15 +67,15 @@ export default function Check() {
 
       <Row title="3. Micro + nhận giọng nói" status={stt} />
       <MicButton appearance="recorder" state={mic.state} onPress={mic.toggle} durationMs={mic.durationMs} />
+      </View>
     </Screen>
   );
 }
 
 function Row({ title, status }: { title: string; status: Status }) {
-  const bg = status.ok === null ? colors.surface : status.ok ? colors.successBg : colors.warningBg;
   const icon = status.ok === null ? 'hourglass' : status.ok ? 'check' : 'warning';
   return (
-    <View style={[styles.row, { backgroundColor: bg }]}>
+    <View style={[styles.row, status.ok === false && { borderColor: colors.danger }]}>
       <View style={styles.heading}>
         <Icon name={icon} color={status.ok === false ? colors.danger : colors.text} />
         <AppText style={styles.title}>{title}</AppText>
@@ -85,7 +86,9 @@ function Row({ title, status }: { title: string; status: Status }) {
 }
 
 const styles = StyleSheet.create({
-  row: { borderRadius: radius, borderWidth: 1, borderColor: colors.border, padding: space.md, gap: 4 },
+  inset: { marginHorizontal: '2%' },
+  content: { gap: space.md },
+  row: { backgroundColor: 'transparent', borderRadius: radius, borderWidth: 1, borderColor: colors.border, padding: space.md, gap: 4 },
   heading: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   title: { flex: 1, fontWeight: '700' },
 });

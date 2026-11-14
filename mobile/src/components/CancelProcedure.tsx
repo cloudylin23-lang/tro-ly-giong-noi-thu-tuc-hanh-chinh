@@ -31,7 +31,7 @@ export function CancelProcedure({ open, onOpenChange, onConfirm, hasDraft = true
 }
 
 const styles = StyleSheet.create({
-  overlay: { flex: 1, backgroundColor: 'rgba(27, 9, 5, 0.35)' },
+  overlay: { flex: 1, backgroundColor: colors.scrim },
   content: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', padding: space.md },
   card: { width: '100%', maxWidth: layout.pageWidth, backgroundColor: colors.surface, borderRadius: radius, padding: space.md, gap: space.md },
 });
