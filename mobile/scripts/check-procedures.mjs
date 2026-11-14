@@ -40,6 +40,13 @@ for (const file of files) {
   if (!Array.isArray(p.aliases) || p.aliases.length === 0) err(file, `cần ít nhất 1 "aliases"`);
   if (!Array.isArray(p.documents)) err(file, `thiếu "documents" (mảng)`);
   for (const k of ['name', 'address', 'hours']) if (!isStr(p.office?.[k])) err(file, `thiếu "office.${k}"`);
+  if (p.office?.mapsQuery !== undefined && !isStr(p.office.mapsQuery)) err(file, `"office.mapsQuery" phải là chuỗi không rỗng`);
+  if (p.office && p.office.mapsQuery === undefined) warn(file, `chưa có "office.mapsQuery" — nút mở bản đồ sẽ bị ẩn`);
+  if (p.feeExemption !== undefined) {
+    const x = p.feeExemption;
+    if (!Number.isInteger(x?.minAge) || x.minAge < 0 || x.minAge > 120) err(file, `"feeExemption.minAge" phải là số tuổi nguyên`);
+    if (!isStr(x?.text)) err(file, `thiếu "feeExemption.text"`);
+  }
   if (/CẦN CẬP NHẬT|BẢN NHÁP/i.test(JSON.stringify(p))) warn(file, `còn chữ "CẦN CẬP NHẬT"/"BẢN NHÁP"`);
 
   if (!Array.isArray(p.fields) || p.fields.length === 0) {

@@ -1,7 +1,7 @@
 // State machine của luồng hỏi đáp. CODE nắm luồng, AI chỉ trích dữ liệu.
 import { copy } from '@/copy';
 import type { ExtractResponse, Field, Procedure, Session } from '@/types';
-import { check, digitsFromSpeech, speakable } from './validate';
+import { check, digitsFromSpeech, displayable, speakable } from './validate';
 
 export function newSession(procedureId: string): Session {
   return { procedureId, filled: {}, skipped: [], updatedAt: Date.now() };
@@ -161,4 +161,43 @@ export function summaryText(p: Procedure, s: Session): string {
     return v ? `${f.label}: ${speakable(f, v)}.` : `${f.label}: chưa có.`;
   });
   return lines.join(' ');
+}
+
+// ---- Màn kết quả / chế độ quầy ----
+
+/** Các dòng cho chế độ quầy: chỉ mục đã có giá trị, đúng thứ tự field trong JSON (= thứ tự trên mẫu CT01/DC02) */
+export function counterRows(p: Procedure, s: Session): { label: string; value: string }[] {
+  return activeFields(p, s).flatMap((f) => {
+    const v = s.filled[f.key];
+    return v ? [{ label: f.label, value: displayable(f, v) }] : [];
+  });
+}
+
+/** Tick / bỏ tick một giấy tờ đã chuẩn bị */
+export function toggleDoc(s: Session, doc: string): Session {
+  const cur = s.checkedDocs ?? [];
+  const checkedDocs = cur.includes(doc) ? cur.filter((d) => d !== doc) : [...cur, doc];
+  return { ...s, checkedDocs, updatedAt: Date.now() };
+}
+
+/** Link Google Maps tìm nơi nộp; null nếu thủ tục chưa có `office.mapsQuery` */
+export function mapsUrl(p: Procedure): string | null {
+  const q = p.office.mapsQuery?.trim();
+  return q ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}` : null;
+}
+
+/** Tuổi tròn tính từ ngày sinh "dd/mm/yyyy" (đã qua validate); null nếu không đọc được */
+export function ageFrom(dob: string | undefined, today = new Date()): number | null {
+  const m = dob?.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!m) return null;
+  const [d, mo, y] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  const hadBirthday = today.getMonth() + 1 > mo || (today.getMonth() + 1 === mo && today.getDate() >= d);
+  return today.getFullYear() - y - (hadBirthday ? 0 : 1);
+}
+
+/** Câu "Bác được miễn lệ phí" nếu đủ tuổi theo `feeExemption`; null nếu không áp dụng */
+export function feeExemptText(p: Procedure, s: Session, today = new Date()): string | null {
+  if (!p.feeExemption) return null;
+  const age = ageFrom(s.filled.ngay_sinh, today);
+  return age !== null && age >= p.feeExemption.minAge ? p.feeExemption.text : null;
 }
