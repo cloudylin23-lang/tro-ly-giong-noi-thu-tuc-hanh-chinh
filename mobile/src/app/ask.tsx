@@ -52,7 +52,7 @@ export default function Ask() {
         current: field,
         others: remainingFields(procedure, session, field.key),
       });
-      const r = applyTurn(procedure, session, field, res);
+      const r = applyTurn(procedure, session, field, res, text);
       setReply(r.reply || null);
       spokenFor.current = r.next?.key ?? null; // câu hỏi kế đã nằm trong lời đọc dưới đây
       setSession(r.session);
