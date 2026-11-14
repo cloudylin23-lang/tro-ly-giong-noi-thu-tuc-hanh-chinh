@@ -1,4 +1,5 @@
 import { handler, json } from '../lib/http.js';
+import { addLogFields, log } from '../lib/log.js';
 import { HttpError } from '../lib/openai.js';
 import { runTurn } from '../lib/turn.js';
 import type { TurnRequest } from '../lib/types.js';
@@ -12,5 +13,10 @@ export default handler(async (req) => {
   } catch {
     throw new HttpError(400, 'Body phải là JSON');
   }
-  return json(await runTurn(body));
+  addLogFields({ mode: body?.mode });
+  log.info('turn.input', { utteranceChars: typeof body?.utterance === 'string' ? body.utterance.length : 0 });
+  const out = await runTurn(body);
+  if ('act' in out) log.info('turn.extract', { act: out.act, keys: out.values.map((v) => v.key) });
+  else log.info('turn.classify', { procedureId: out.procedureId });
+  return json(out);
 });

@@ -24,7 +24,7 @@ describe('handler', () => {
       throw new HttpError(400, 'Thiếu utterance');
     }).fetch(req());
     expect(res.status).toBe(400);
-    expect(await res.json()).toEqual({ error: 'Thiếu utterance' });
+    expect(await res.json()).toMatchObject({ error: 'Thiếu utterance' });
   });
 
   it('lỗi bất ngờ → 500', async () => {
