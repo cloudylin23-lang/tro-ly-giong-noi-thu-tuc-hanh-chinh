@@ -1,7 +1,6 @@
-import { Image, Platform, StyleSheet } from 'react-native';
+import { Image, StyleSheet } from 'react-native';
 
 export function WebBackground() {
-  if (Platform.OS !== 'web') return null;
   return (
     <Image
       source={require('../../assets/dong-son-background.png')}
