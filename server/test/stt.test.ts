@@ -40,3 +40,32 @@ describe('transcribe', () => {
     expect(fake.transcribe).toHaveBeenCalledTimes(2);
   });
 });
+
+describe('file im lặng → STT "ảo" bị bỏ', () => {
+  it.each([
+    'căn cước công dân',
+    'Căn cước công dân.',
+    'CCCD',
+    'số định danh, tạm trú, thường trú',
+    'Căn cước, căn cước công dân, CCCD.',
+    'Cảm ơn các bạn đã theo dõi!',
+    'Người lớn tuổi nói tiếng Việt về thủ tục hành chính',
+  ])('bỏ: %s', async (text) => {
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    fake.transcribe.mockResolvedValue({ text });
+    await expect(transcribe(audioFile())).resolves.toBe('');
+  });
+
+  it.each([
+    'tạm trú',
+    'thường trú',
+    'mất căn cước công dân rồi',
+    'tôi muốn đăng ký tạm trú',
+    'chủ hộ là con trai tôi',
+    'không không một không năm tư',
+  ])('giữ: %s', async (text) => {
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    fake.transcribe.mockResolvedValue({ text });
+    await expect(transcribe(audioFile())).resolves.toBe(text);
+  });
+});
