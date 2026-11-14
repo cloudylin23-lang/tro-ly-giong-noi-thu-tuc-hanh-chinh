@@ -81,7 +81,7 @@ export const api = {
       // React Native nhận object {uri, name, type} làm file trong FormData
       form.append('audio', { uri, name: 'audio.m4a', type: 'audio/m4a' } as unknown as Blob);
     }
-    const { text } = await request<{ text: string }>('/api/stt', { method: 'POST', body: form }, 20_000);
+    const { text } = await request<{ text: string }>('/api/stt', { method: 'POST', body: form }, 25_000);
     return text;
   },
 
@@ -97,7 +97,7 @@ export const api = {
           procedures: procedures.map(({ id, name, aliases }) => ({ id, name, aliases })),
         }),
       },
-      12_000,
+      15_000,
     );
   },
 
@@ -115,7 +115,7 @@ export const api = {
           otherFields: args.others.map(toSpec),
         }),
       },
-      12_000,
+      15_000,
     );
   },
 };

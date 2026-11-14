@@ -66,6 +66,7 @@ export function applyTurn(
   let session: Session = { ...s, filled: { ...s.filled }, skipped: [...s.skipped], updatedAt: Date.now() };
   let currentError: string | null = null;
   let currentAccepted = false;
+  let otherRejected = false;
 
   if (res.act === 'answer') {
     let values = res.values;
@@ -83,6 +84,8 @@ export function applyTurn(
         if (key === current.key) currentAccepted = true;
       } else if (key === current.key) {
         currentError = c.reason;
+      } else {
+        otherRejected = true;
       }
     }
   } else if (res.act === 'dont_know') {
@@ -105,6 +108,14 @@ export function applyTurn(
     // Dãy số: code tự đọc từng chữ số cho chắc, không dùng câu AI viết (TTS hay đọc "1800" thành "một nghìn tám trăm")
     return { session, reply: copy.ask.confirmNumber(current.label, speakable(current, session.filled[current.key])), next };
   }
+  if (otherRejected) {
+    // Câu AI có thể nhắc lại cả giá trị vừa bị loại → code tự xác nhận đúng mục đã ghi
+    return {
+      session,
+      reply: currentAccepted ? copy.ask.confirmValue(current.label, speakable(current, session.filled[current.key])) : '',
+      next,
+    };
+  }
   return { session, reply: res.reply, next };
 }
 
@@ -112,11 +123,24 @@ export function skip(s: Session, key: string): Session {
   return { ...s, skipped: [...new Set([...s.skipped, key])], updatedAt: Date.now() };
 }
 
-/** Xoá một field để hỏi lại (người dùng bấm "sửa") */
-export function reopen(s: Session, key: string): Session {
+/**
+ * Xoá một field để hỏi lại (người dùng bấm "sửa").
+ * Field nào chỉ hỏi theo field này (`when`) cũng bị xoá, để đổi trường hợp thì hỏi lại từ đầu.
+ */
+export function reopen(p: Procedure, s: Session, key: string): Session {
+  const drop = new Set([key]);
+  for (let grew = true; grew; ) {
+    grew = false;
+    for (const f of p.fields) {
+      if (f.when && drop.has(f.when.field) && !drop.has(f.key)) {
+        drop.add(f.key);
+        grew = true;
+      }
+    }
+  }
   const filled = { ...s.filled };
-  delete filled[key];
-  return { ...s, filled, skipped: s.skipped.filter((k) => k !== key), updatedAt: Date.now() };
+  for (const k of drop) delete filled[k];
+  return { ...s, filled, skipped: s.skipped.filter((k) => !drop.has(k)), updatedAt: Date.now() };
 }
 
 /** Bản tóm tắt để đọc to ở màn kết quả */
