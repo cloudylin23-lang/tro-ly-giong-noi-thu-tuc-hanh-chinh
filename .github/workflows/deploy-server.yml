@@ -44,9 +44,9 @@ jobs:
         if: steps.guard.outputs.skip != 'true'
         with:
           node-version: 24
-      - name: Typecheck trước khi deploy
+      - name: Typecheck + test trước khi deploy
         if: steps.guard.outputs.skip != 'true'
-        run: npm ci && npx tsc --noEmit
+        run: npm ci && npx tsc --noEmit && npm test
       - name: Deploy production
         if: steps.guard.outputs.skip != 'true'
         env:

@@ -27,12 +27,14 @@ export class HttpError extends Error {
   }
 }
 
-/** Gọi LLM với Structured Outputs, trả về object đã parse. */
+/** Gọi LLM với Structured Outputs, trả về object đã parse và đã kiểm tra. */
 export async function structured<T>(opts: {
   name: string;
   schema: Record<string, unknown>;
   instructions: string;
   input: string;
+  /** Kiểm tra lại kết quả ở runtime — không tin tuyệt đối vào strict schema */
+  validate?: (data: unknown) => data is T;
 }): Promise<T> {
   const res = await openai().responses.create({
     model: config.llmModel,
@@ -44,5 +46,16 @@ export async function structured<T>(opts: {
     },
     store: false,
   });
-  return JSON.parse(res.output_text) as T;
+  return parseOutput(res.output_text, opts.validate);
+}
+
+export function parseOutput<T>(text: string, validate?: (data: unknown) => data is T): T {
+  let data: unknown;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new HttpError(502, 'AI trả kết quả không phải JSON');
+  }
+  if (validate && !validate(data)) throw new HttpError(502, 'AI trả kết quả không đúng định dạng');
+  return data as T;
 }
