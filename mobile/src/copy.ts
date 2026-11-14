@@ -36,6 +36,8 @@ export const copy = {
     thinking: 'Con đang xử lý…',
     durationLabel: 'Thời gian ghi âm',
     tooShort: 'Con chưa nghe thấy gì, bác bấm và nói lại nhé.',
+    slow: 'Mạng hơi chậm, con vẫn đang nghe bác nói…',
+    retry: 'Gửi lại câu vừa nói',
     permissionDenied:
       'App chưa được dùng micro. Bác vào Cài đặt → Ứng dụng → Trợ lý thủ tục → Quyền → Micro để cho phép, hoặc gõ chữ ở dưới.',
   },
@@ -57,6 +59,8 @@ export const copy = {
     youSaid: 'Bác vừa nói:',
     filledTitle: 'Đã ghi (bấm để sửa):',
     invalidPrefix: 'Con nghe chưa rõ ạ.',
+    confirmNumber: (label: string, spoken: string) => `Dạ, con ghi ${label.toLowerCase()} là: ${spoken}.`,
+    confirmValue: (label: string, spoken: string) => `Dạ, con ghi ${label.toLowerCase()} là ${spoken}.`,
     skippedValue: '(để trống — bổ sung sau)',
     optionalLabel: 'Không bắt buộc',
     optionalHint: 'Mục này không bắt buộc. Nếu không có, bác bấm nút Không có nhé.',

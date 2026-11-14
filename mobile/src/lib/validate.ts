@@ -29,7 +29,7 @@ export function check(field: FieldShape, raw: string): Checked {
     case 'id12': {
       const digits = v.replace(/\D/g, '');
       if (digits.length !== 12) {
-        return { ok: false, reason: `Số căn cước cần đủ 12 số, con mới nghe được ${digits.length} số.` };
+        return { ok: false, reason: `Số căn cước cần đúng 12 số, con nghe được ${digits.length} số. Bác đọc lại chậm từng số giúp con nhé.` };
       }
       return { ok: true, value: digits };
     }
@@ -37,7 +37,7 @@ export function check(field: FieldShape, raw: string): Checked {
     case 'phone': {
       let digits = v.replace(/\D/g, '');
       if (digits.startsWith('84')) digits = `0${digits.slice(2)}`;
-      if (!/^0\d{9,10}$/.test(digits)) return { ok: false, reason: 'Số điện thoại cần 10 số, bắt đầu bằng số 0.' };
+      if (!/^0\d{9}$/.test(digits)) return { ok: false, reason: 'Số điện thoại cần 10 số, bắt đầu bằng số 0.' };
       return { ok: true, value: digits };
     }
 
@@ -65,6 +65,88 @@ export function check(field: FieldShape, raw: string): Checked {
 const pad = (n: number) => String(n).padStart(2, '0');
 const fold = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/gi, 'd').toLowerCase().trim();
 const optionLabel = (field: FieldShape, value: string) => field.options?.find((o) => o.value === value)?.label ?? value;
+
+// Từ chỉ MỘT chữ số, so khớp ĐÚNG DẤU: "bà", "Nam", "tạm", "sau", "từ", "Lê" không phải chữ số.
+// AI hay đọc nhầm "năm tám" thành 85 nên dãy số do code tự đổi.
+const DIGIT_WORDS: Record<string, string> = {
+  không: '0', linh: '0', lẻ: '0',
+  một: '1', mốt: '1',
+  hai: '2', ba: '3', bốn: '4', tư: '4',
+  năm: '5', lăm: '5', sáu: '6', bảy: '7', bẩy: '7', tám: '8', chín: '9',
+};
+// Cả câu gõ không dấu thì mới nhận dạng chữ số không dấu
+const DIGIT_WORDS_PLAIN: Record<string, string> = {
+  khong: '0', mot: '1', hai: '2', ba: '3', bon: '4', nam: '5', sau: '6', bay: '7', tam: '8', chin: '9',
+};
+// Có các từ này nghĩa là đọc kiểu "mười hai", "một trăm" → không tự đổi được, để AI lo
+const NUMBER_WORDS = new Set(['muoi', 'tram', 'nghin', 'ngan', 'trieu']);
+
+/**
+ * Lấy dãy chữ số từ câu nói, mỗi từ chỉ số = đúng một chữ số.
+ * Chỉ lấy đoạn chữ số LIỀN NHAU dài nhất, để "Không, số của tôi là 0912…" không dính thêm số 0 ở đầu.
+ * "số tôi là không chín tám, một hai ba" → "098123". Trả null nếu không chắc chắn.
+ */
+export function digitsFromSpeech(text: string): string | null {
+  const lower = text.toLowerCase().normalize('NFC');
+  const words = fold(lower) === lower.trim() ? DIGIT_WORDS_PLAIN : DIGIT_WORDS;
+  let best = '';
+  let run = '';
+  for (const raw of lower.split(/[^\p{L}\p{N}]+/u)) {
+    if (!raw) continue;
+    if (NUMBER_WORDS.has(fold(raw))) return null;
+    const d = /^\d+$/.test(raw) ? raw : words[raw];
+    if (d) {
+      run += d;
+      if (run.length > best.length) best = run;
+    } else {
+      run = '';
+    }
+  }
+  return best.length >= 6 ? best : null;
+}
+
+export const MASKED_NUMBER = '[dãy số đã ẩn]';
+
+/**
+ * Che các dãy số dài (≥ minDigits chữ số, đọc bằng chữ hoặc viết số) trước khi gửi câu nói cho AI —
+ * số căn cước / số điện thoại không cần đi qua AI vì code đã tự đổi được.
+ * "tôi là Hùng, số căn cước không không một …" → "tôi là Hùng, số căn cước [dãy số đã ẩn]"
+ */
+export function maskLongDigitRuns(text: string, minDigits = 9): string {
+  const lower = text.toLowerCase().normalize('NFC');
+  const words = fold(lower) === lower.trim() ? DIGIT_WORDS_PLAIN : DIGIT_WORDS;
+  // Tách giữ nguyên dấu cách / dấu câu: [từ, ngăn cách, từ, ngăn cách, …]
+  const parts = text.normalize('NFC').split(/([^\p{L}\p{N}]+)/u);
+  const digitsOf = (part: string) => {
+    const p = part.toLowerCase();
+    return /^\d+$/.test(p) ? p.length : words[p] ? 1 : 0;
+  };
+  const out: string[] = [];
+  let i = 0;
+  while (i < parts.length) {
+    if (i % 2 === 0 && digitsOf(parts[i]) > 0) {
+      // gom một đoạn từ chỉ số liền nhau (chỉ cách nhau bởi dấu cách / dấu câu)
+      let j = i;
+      let count = 0;
+      while (j < parts.length && digitsOf(parts[j]) > 0) {
+        count += digitsOf(parts[j]);
+        j += 2;
+      }
+      const end = j - 2; // chỉ số của từ chỉ số cuối cùng trong đoạn
+      if (count >= minDigits) {
+        out.push(MASKED_NUMBER);
+      } else {
+        out.push(parts.slice(i, end + 1).join(''));
+      }
+      if (end + 1 < parts.length) out.push(parts[end + 1]); // ngăn cách sau đoạn
+      i = end + 2;
+    } else {
+      out.push(parts[i]);
+      i++;
+    }
+  }
+  return out.join('');
+}
 
 /** Cách đọc to một giá trị cho TTS nghe rõ (số đọc từng chữ số, ngày đọc đầy đủ). */
 export function speakable(field: FieldShape, value: string): string {

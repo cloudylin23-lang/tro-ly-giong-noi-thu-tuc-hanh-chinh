@@ -89,7 +89,7 @@ export default function Result() {
               style={({ pressed }) => [styles.row, pressed && { opacity: 0.7 }]}
               onPress={() => {
                 // Sửa một mục → quay lại hỏi đúng mục đó
-                setSession(reopen(session, f.key));
+                setSession(reopen(procedure, session, f.key));
                 router.replace('/ask');
               }}
             >

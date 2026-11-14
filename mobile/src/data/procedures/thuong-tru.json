@@ -11,6 +11,18 @@
   ],
   "form": "CT01",
   "formTitle": "TỜ KHAI THAY ĐỔI THÔNG TIN CƯ TRÚ",
+  "extraForms": [
+    {
+      "form": "MAU02",
+      "title": "TỜ KHAI XÁC NHẬN TÌNH TRẠNG CHỖ Ở HỢP PHÁP, DIỆN TÍCH NHÀ Ở TỐI THIỂU ĐỂ ĐĂNG KÝ THƯỜNG TRÚ, ĐĂNG KÝ TẠM TRÚ",
+      "when": {
+        "field": "giay_to_cho_o",
+        "in": [
+          "khong"
+        ]
+      }
+    }
+  ],
   "fields": [
     {
       "key": "ho_ten",
@@ -64,22 +76,18 @@
       "label": "Trường hợp chỗ ở",
       "kind": "choice",
       "question": "Nhà đó là nhà của bác, bác về ở với người thân như vợ chồng, con cái, hay bác thuê, mượn, ở nhờ ạ?",
-      "hint": "về ở với vợ/chồng, con, cha mẹ, ông bà… → nha_nguoi_than; thuê, mượn, ở nhờ → thue_o_nho",
+      "hint": "về ở với vợ/chồng, con, cha mẹ, ông bà… → nha_nguoi_than; thuê, mượn, ở nhờ → thue_o_nho; nhà tu hành, chức sắc ở chùa, nhà thờ → chuc_sac_ton_giao; được chùa, nhà thờ nhận nuôi → nuoi_tai_co_so_ton_giao; ở trung tâm bảo trợ, viện dưỡng lão, gia đình nhận nuôi dưỡng → tro_giup_xa_hoi; sống trên tàu, thuyền → phuong_tien; bộ đội, công an ở doanh trại, đơn vị → don_vi_dong_quan",
       "options": [
         {
           "value": "nha_minh",
-          "label": "Nhà thuộc sở hữu của bác",
-          "documents": [
-            "Giấy tờ chứng minh nhà của bác (sổ đỏ, sổ hồng, hợp đồng mua bán nhà…) — 1 bản sao, chỉ cần khi công an không tra được trên hệ thống"
-          ]
+          "label": "Nhà thuộc sở hữu của bác"
         },
         {
           "value": "nha_nguoi_than",
           "label": "Về ở với người thân (vợ chồng, con, cha mẹ…)",
           "documents": [
             "Chủ hộ hoặc chủ nhà ghi ý kiến đồng ý vào tờ khai (hoặc xác nhận đồng ý trên ứng dụng VNeID)",
-            "Giấy tờ chứng minh quan hệ với chủ hộ (giấy khai sinh, giấy đăng ký kết hôn…) — 1 bản sao, chỉ cần khi công an không tra được trên hệ thống",
-            "Giấy tờ chứng minh nhà hợp pháp của chủ nhà — chỉ cần khi công an không tra được trên hệ thống"
+            "Giấy tờ chứng minh quan hệ với chủ hộ (giấy khai sinh, giấy đăng ký kết hôn…) — 1 bản sao, chỉ cần khi công an không tra được trên hệ thống"
           ]
         },
         {
@@ -88,7 +96,50 @@
           "documents": [
             "Chủ nhà ghi ý kiến đồng ý vào tờ khai (hoặc xác nhận đồng ý trên ứng dụng VNeID)",
             "Hợp đồng thuê, mượn, ở nhờ ĐÃ CÔNG CHỨNG hoặc CHỨNG THỰC — 1 bản sao",
-            "Giấy tờ chứng minh đủ diện tích ở tối thiểu theo quy định của tỉnh, thành phố (không dưới 8 m² sàn mỗi người)"
+            "Giấy tờ chứng minh đủ diện tích ở tối thiểu theo quy định của tỉnh, thành phố (không dưới 8 m² sàn mỗi người): giấy tờ nhà có ghi diện tích, hoặc Mẫu số 02 có Ủy ban nhân dân xã xác nhận"
+          ]
+        },
+        {
+          "value": "chuc_sac_ton_giao",
+          "label": "Chức sắc, nhà tu hành ở tại cơ sở tôn giáo, tín ngưỡng",
+          "documents": [
+            "Người đại diện hoặc ban quản lý cơ sở tín ngưỡng, tôn giáo ghi ý kiến đồng ý vào tờ khai (trừ khi đã có văn bản đồng ý riêng)",
+            "Giấy tờ chứng minh là chức sắc, chức việc, nhà tu hành được bổ nhiệm, phân công đến cơ sở; hoặc là người đại diện cơ sở tín ngưỡng — 1 bản sao",
+            "Văn bản của Ủy ban nhân dân xã xác nhận cơ sở có công trình phụ trợ là nhà ở — 1 bản sao"
+          ]
+        },
+        {
+          "value": "nuoi_tai_co_so_ton_giao",
+          "label": "Được chùa, cơ sở tôn giáo, tín ngưỡng nhận nuôi",
+          "documents": [
+            "Người đại diện, ban quản lý hoặc người đứng đầu cơ sở ghi ý kiến đồng ý vào tờ khai (trừ khi đã có văn bản đồng ý riêng)",
+            "Văn bản của Ủy ban nhân dân xã xác nhận người đăng ký thuộc diện trẻ em, người khuyết tật nặng, người không nơi nương tựa được nhận nuôi, và cơ sở có công trình phụ trợ là nhà ở — 1 bản chính"
+          ]
+        },
+        {
+          "value": "tro_giup_xa_hoi",
+          "label": "Được cơ sở trợ giúp xã hội hoặc gia đình nhận chăm sóc, nuôi dưỡng",
+          "documents": [
+            "Nếu ở cơ sở trợ giúp xã hội: văn bản đề nghị của người đứng đầu cơ sở — 1 bản chính",
+            "Nếu ở với hộ gia đình nhận chăm sóc, nuôi dưỡng: chủ hộ hoặc chủ nhà ghi ý kiến đồng ý vào tờ khai",
+            "Giấy tờ xác nhận việc chăm sóc, nuôi dưỡng, trợ giúp — 1 bản sao"
+          ]
+        },
+        {
+          "value": "phuong_tien",
+          "label": "Sống hoặc làm nghề lưu động trên tàu, thuyền, phương tiện",
+          "documents": [
+            "Giấy chứng nhận đăng ký phương tiện và giấy chứng nhận an toàn kỹ thuật, bảo vệ môi trường (phương tiện không phải đăng ký, đăng kiểm thì cần văn bản Ủy ban nhân dân xã xác nhận dùng phương tiện để ở)",
+            "Văn bản Ủy ban nhân dân xã xác nhận nơi phương tiện thường xuyên đậu, đỗ (Mẫu số 01, Nghị định 58/2026/NĐ-CP) — khi phương tiện không phải đăng ký hoặc nơi đăng ký khác nơi đậu, đỗ",
+            "Nếu phương tiện không phải của bác: chủ phương tiện ghi ý kiến đồng ý vào tờ khai"
+          ]
+        },
+        {
+          "value": "don_vi_dong_quan",
+          "label": "Cán bộ, chiến sĩ ở tại đơn vị Công an, Quân đội",
+          "documents": [
+            "Công an nhân dân: giấy giới thiệu của Thủ trưởng đơn vị quản lý trực tiếp, ghi rõ để làm thủ tục đăng ký thường trú và đơn vị có chỗ ở (ký tên, đóng dấu) — 1 bản chính",
+            "Quân đội nhân dân: giấy giới thiệu đăng ký thường trú của cơ quan, đơn vị cấp trung đoàn và tương đương trở lên (ký tên, đóng dấu) — 1 bản chính"
           ]
         }
       ]
@@ -134,12 +185,84 @@
           "thue_o_nho"
         ]
       }
+    },
+    {
+      "key": "giay_to_cho_o",
+      "label": "Giấy tờ chứng minh chỗ ở",
+      "kind": "choice",
+      "question": "Nhà đó có sổ đỏ, sổ hồng hoặc giấy tờ nhà không ạ? Nhà thuê thì bác hỏi chủ nhà giúp con nhé.",
+      "hint": "có sổ đỏ, sổ hồng, hợp đồng mua bán, giấy tờ nhà → co; không có, mất, chưa làm sổ → khong",
+      "options": [
+        {
+          "value": "co",
+          "label": "Có giấy tờ nhà",
+          "documents": [
+            "Giấy tờ nhà (sổ đỏ, sổ hồng, hợp đồng mua bán nhà…) — 1 bản sao, chỉ cần khi công an không tra được trên hệ thống"
+          ]
+        },
+        {
+          "value": "khong",
+          "label": "Không có giấy tờ nhà",
+          "documents": [
+            "Tờ khai xác nhận tình trạng chỗ ở hợp pháp (Mẫu số 02, Nghị định 58/2026/NĐ-CP) — app đã điền sẵn. Bác mang lên Ủy ban nhân dân xã, phường nơi có nhà để xin xác nhận TRƯỚC, rồi nộp kèm hồ sơ"
+          ]
+        }
+      ],
+      "when": {
+        "field": "loai_cho_o",
+        "in": [
+          "nha_minh",
+          "nha_nguoi_than",
+          "thue_o_nho"
+        ]
+      }
+    },
+    {
+      "key": "noi_cu_tru_hien_nay",
+      "label": "Nơi cư trú hiện nay (Mẫu 02)",
+      "kind": "text",
+      "question": "Để làm giấy xác nhận chỗ ở, bác cho con biết hiện bác đang đăng ký thường trú ở địa chỉ nào ạ?",
+      "hint": "địa chỉ thường trú hiện tại của người khai; không có thường trú thì ghi nơi tạm trú hoặc nơi ở hiện tại",
+      "when": {
+        "field": "giay_to_cho_o",
+        "in": [
+          "khong"
+        ]
+      }
+    },
+    {
+      "key": "dien_tich_san",
+      "label": "Diện tích sàn nhà ở (Mẫu 02)",
+      "kind": "text",
+      "question": "Nhà đó rộng khoảng bao nhiêu mét vuông sàn ạ? Nhà nhiều tầng thì bác cộng cả các tầng. Không nhớ thì bác cứ nói không nhớ nhé.",
+      "hint": "ghi số kèm đơn vị, ví dụ \"60 m²\"; không rõ → act=dont_know",
+      "when": {
+        "field": "giay_to_cho_o",
+        "in": [
+          "khong"
+        ]
+      }
+    },
+    {
+      "key": "so_nguoi_thuong_tru",
+      "label": "Số người đang đăng ký thường trú ở nhà đó (Mẫu 02)",
+      "kind": "text",
+      "question": "Hiện nay có bao nhiêu người đang đăng ký thường trú ở nhà đó ạ?",
+      "hint": "ghi số người, ví dụ \"4 người\"",
+      "when": {
+        "field": "giay_to_cho_o",
+        "in": [
+          "khong"
+        ]
+      }
     }
   ],
   "documents": [
     "Tờ khai thay đổi thông tin cư trú (Mẫu CT01, Thông tư 116/2026/TT-BCA) — app đã chuẩn bị sẵn nội dung để bác chép sang",
     "Thẻ căn cước hoặc tài khoản VNeID để cán bộ đối chiếu",
-    "Lưu ý: giấy tờ nào công an đã tra được trên hệ thống hoặc VNeID thì bác không phải nộp lại"
+    "Lưu ý: giấy tờ nào công an đã tra được trên hệ thống hoặc VNeID thì bác không phải nộp lại",
+    "Nếu người đăng ký chưa đủ 18 tuổi: cha, mẹ hoặc người giám hộ ghi ý kiến đồng ý vào tờ khai (hoặc xác nhận trên VNeID). Trẻ mới sinh đăng ký thường trú lần đầu không phải nộp giấy khai sinh, và phải đăng ký trong 60 ngày kể từ ngày đăng ký khai sinh",
+    "Trường hợp riêng: người Việt Nam định cư ở nước ngoài về sinh sống (nhập cảnh bằng hộ chiếu nước ngoài) dùng Mẫu CT02 thay cho CT01, kèm 1 ảnh 4x6"
   ],
   "office": {
     "name": "Công an xã, phường nơi bác muốn đăng ký thường trú",
@@ -149,10 +272,11 @@
     "fee": "20.000đ nộp trực tiếp · 10.000đ nộp qua Cổng Dịch vụ công · Miễn phí nếu nộp qua VNeID (đến hết 31/12/2026)",
     "note": "Bác có thể nhờ con cháu nộp online qua ứng dụng VNeID, hiện đang được miễn lệ phí."
   },
-  "source": "Cổng Dịch vụ công Quốc gia, thủ tục Đăng ký thường trú (mã 1.004222); Luật Cư trú 2020 (Điều 20); Thông tư 116/2026/TT-BCA (biểu mẫu CT01, thay toàn bộ biểu mẫu cư trú từ 01/7/2026); Công an tỉnh An Giang về miễn lệ phí qua VNeID. Truy cập 13/11/2026.",
+  "source": "Cổng Dịch vụ công Quốc gia, thủ tục Đăng ký thường trú (mã 1.004222); Luật Cư trú 2020 (Điều 20); Thông tư 116/2026/TT-BCA (Mẫu CT01, CT02, thay toàn bộ biểu mẫu cư trú từ 01/7/2026); Nghị định 58/2026/NĐ-CP (Mẫu số 01, 02 Phụ lục IV); Công an tỉnh An Giang về miễn lệ phí qua VNeID. Truy cập 14/11/2026.",
   "sourceUrls": [
     "https://congan.angiang.gov.vn/dang-ky-thuong-tru-theo-quy-dinh-moi-nguoi-dan-duoc-mien-le-phi-khi-thuc-hien-qua-vneid-den-het-nam-2026",
     "https://luatvietnam.vn/tin-van-ban-moi/tu-01-7-2026-thay-the-toan-bo-15-bieu-mau-dang-ky-quan-ly-cu-tru-186-110380-article.html",
-    "https://congbao.chinhphu.vn/van-ban/thong-tu-so-116-2026-tt-bca-470078.htm"
+    "https://congbao.chinhphu.vn/van-ban/thong-tu-so-116-2026-tt-bca-470078.htm",
+    "https://xdcs.cdnchinhphu.vn/446259493575335936/2026/2/24/58nd-signed-17719193053761644276754.pdf"
   ]
 }

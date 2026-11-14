@@ -151,6 +151,7 @@ export default function Home() {
             <AppText>“{heard}”</AppText>
           </Bubble>
         ) : null}
+        {voice.slow ? <Bubble who="warning">{copy.mic.slow}</Bubble> : null}
         {message || error ? <Bubble who="warning">{message ?? error ?? ''}</Bubble> : null}
         {retryText !== null ? (
           <BigButton compact label={copy.errors.retry} disabled={inputDisabled} onPress={() => void handleText(retryText)} />
@@ -161,6 +162,7 @@ export default function Home() {
         <TextFallback
           compact
           onSubmit={(text) => {
+            voice.clearRetry();
             if (!inputDisabled) void handleText(text);
           }}
           disabled={inputDisabled}

@@ -18,7 +18,7 @@ import { colors, layout, space, touch } from '@/theme';
 export default function Confirm() {
   const { procedureId, reply } = useLocalSearchParams<{ procedureId: string; reply?: string }>();
   const procedure = getProcedure(procedureId);
-  const { setSession } = useSession();
+  const { session, setSession } = useSession();
   const [cancelOpen, setCancelOpen] = useState(false);
 
   const line = `${reply || `Con hiểu là bác muốn làm thủ tục ${procedure?.name}.`} ${copy.confirm.ask}`;
@@ -30,7 +30,8 @@ export default function Confirm() {
   if (!procedure) return <Redirect href="/" />;
 
   const yes = () => {
-    setSession(newSession(procedure.id));
+    // Đang làm dở đúng thủ tục này thì tiếp tục, không xoá dữ liệu đã khai.
+    if (session?.procedureId !== procedure.id) setSession(newSession(procedure.id));
     router.replace('/ask');
   };
 

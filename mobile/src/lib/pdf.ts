@@ -1,5 +1,6 @@
 // Tạo tờ khai PDF từ HTML rồi mở hộp thoại chia sẻ (Zalo, Gmail, in…).
-// Thủ tục có `form: "CT01"` → dựng theo bố cục Mẫu CT01 (Thông tư 116/2026/TT-BCA).
+// Thủ tục có `form: "CT01"` → dựng theo bố cục Mẫu CT01 (Thông tư 116/2026/TT-BCA),
+// `form: "DC02"` → Mẫu DC02 (Thông tư 118/2026/TT-BCA). `extraForms` (Mẫu 02) in thêm trang khi cần.
 // Thủ tục khác → bảng chung. Đây là bản điền sẵn để chép / đối chiếu, không thay biểu mẫu chính thức.
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
@@ -61,11 +62,30 @@ const page = (title: string, body: string) =>
 
 // ---------- Mẫu CT01 ----------
 
-/** "…, phường Khương Đình, Hà Nội" → "Công an phường Khương Đình" */
-function residenceOffice(address: string | undefined, fallback: string): string {
-  const m = address?.match(/(phường|xã|đặc khu)\s+[^,.;]+/i);
-  return m ? `Công an ${m[0].trim()}` : fallback;
+/**
+ * "…, phường Khương Đình, Hà Nội" → "Công an phường Khương Đình".
+ * Chỉ xét từng cụm ngăn bởi dấu phẩy và cụm phải BẮT ĐẦU bằng phường/xã/đặc khu,
+ * để tên đường như "5 Xã Đàn, phường Kim Liên" không bị nhận nhầm.
+ */
+function xaPhuong(address: string | undefined): string | undefined {
+  const part = address
+    ?.split(/[,;]/)
+    .map((s) => s.trim())
+    .find((s) => /^(phường|xã|đặc khu)\s+\S/i.test(s));
+  return part?.replace(/^\S+/, (w) => w.toLowerCase());
 }
+
+function residenceOffice(address: string | undefined, fallback: string): string {
+  const part = xaPhuong(address);
+  return part ? `Công an ${part}` : fallback;
+}
+
+/** Giá trị đã điền của một field, in đậm; chưa có thì in dấu chấm */
+const fieldVal = (p: Procedure, s: Session) => (key: string) => {
+  const field = p.fields.find((x) => x.key === key);
+  const v = s.filled[key];
+  return field && v ? `<span class="v">${esc(displayable(field, v))}</span>` : DOTS;
+};
 
 function idBoxes(digits: string | undefined): string {
   const d = (digits ?? '').padEnd(12, ' ').slice(0, 12).split('');
@@ -74,11 +94,7 @@ function idBoxes(digits: string | undefined): string {
 
 function ct01Html(p: Procedure, s: Session): string {
   const f = s.filled;
-  const val = (key: string) => {
-    const field = p.fields.find((x) => x.key === key);
-    const v = f[key];
-    return field && v ? `<span class="v">${esc(displayable(field, v))}</span>` : DOTS;
-  };
+  const val = fieldVal(p, s);
   const address = f.dia_chi_tam_tru ?? f.dia_chi_thuong_tru;
   const ownHome = f.loai_cho_o === 'nha_minh';
 
@@ -124,10 +140,108 @@ function ct01Html(p: Procedure, s: Session): string {
   <div class="sign">
     <div>${dateLine}<b>Ý KIẾN CỦA CHỦ HỘ</b></div>
     <div>${dateLine}<b>Ý KIẾN CỦA CHỦ SỞ HỮU<br/>CHỖ Ở HỢP PHÁP</b>Họ và tên: ……………<br/>Số định danh cá nhân: ……………</div>
-    <div>${dateLine}<b>Ý KIẾN CỦA CHA, MẸ<br/>HOẶC NGƯỜI GIÁM HỘ</b></div>
+    <div>${dateLine}<b>Ý KIẾN CỦA CHA HOẶC MẸ<br/>HOẶC NGƯỜI GIÁM HỘ</b>Họ và tên: ……………<br/>Số định danh cá nhân: ……………</div>
     <div>${dateLine}<b>NGƯỜI KÊ KHAI</b>${f.ho_ten ? esc(f.ho_ten) : ''}</div>
   </div>
 
+  ${extraPages(p, s)}
+  <div class="page"></div>
+  ${guide(p, s)}`,
+  );
+}
+
+// ---------- Mẫu số 02 (Nghị định 58/2026/NĐ-CP) ----------
+
+/** Trang tờ khai phụ (vd Mẫu 02) cho những trường hợp cần — điều kiện nằm ở `extraForms` trong JSON */
+function extraPages(p: Procedure, s: Session): string {
+  return (p.extraForms ?? [])
+    .filter((x) => x.when.in.includes(s.filled[x.when.field] ?? ''))
+    .map((x) => `<div class="page"></div>${mau02Body(p, s, x.title)}`)
+    .join('');
+}
+
+function mau02Body(p: Procedure, s: Session, title: string): string {
+  const f = s.filled;
+  const val = fieldVal(p, s);
+  const address = f.dia_chi_tam_tru ?? f.dia_chi_thuong_tru;
+  const area = xaPhuong(address);
+  const purpose = p.id === 'tam_tru' ? 'đăng ký tạm trú' : 'đăng ký thường trú';
+  return `
+  <div class="right">Mẫu số 02, Phụ lục IV, Nghị định số 58/2026/NĐ-CP</div>
+  <div class="center nation">Cộng hòa xã hội chủ nghĩa Việt Nam</div>
+  <div class="center motto">Độc lập – Tự do – Hạnh phúc</div>
+  <h1>${esc(title)}</h1>
+  <div class="sub">Kính gửi: <span class="v">${area ? `Ủy ban nhân dân ${esc(area)}` : '……………………………'}</span></div>
+  <h2>I. THÔNG TIN NGƯỜI ĐỀ NGHỊ</h2>
+  <div class="item">1. Họ, chữ đệm và tên: ${val('ho_ten')}</div>
+  <div class="item">2. Ngày, tháng, năm sinh: ${val('ngay_sinh')}</div>
+  <div class="item">3. Số định danh cá nhân: ${val('so_dinh_danh')}</div>
+  <div class="item">4. Nơi cư trú: ${val('noi_cu_tru_hien_nay')}</div>
+  <h2>II. THÔNG TIN VỀ CHỖ Ở HỢP PHÁP</h2>
+  <div class="item">1. Địa chỉ chỗ ở hợp pháp: ${address ? `<span class="v">${esc(address)}</span>` : DOTS}</div>
+  <div class="item">2. Thông tin về nhà ở:</div>
+  <div class="item">- Diện tích thửa đất: ${DOTS} Diện tích xây dựng: ${DOTS} Diện tích sàn: ${val('dien_tich_san')}</div>
+  <div class="item">- Tổng số người đang đăng ký thường trú: ${val('so_nguoi_thuong_tru')}</div>
+  <div class="item">- Diện tích sàn còn lại được đăng ký thường trú khi cho thuê, mượn, ở nhờ: ${DOTS}</div>
+  <h2>III. NỘI DUNG ĐỀ NGHỊ ỦY BAN NHÂN DÂN XÁC NHẬN:</h2>
+  <div class="item">1. Tình trạng chỗ ở để đăng ký thường trú, tạm trú: <span class="v">Xác nhận chỗ ở tại ${
+    address ? esc(address) : '…'
+  } là chỗ ở hợp pháp để ${purpose}.</span></div>
+  <div class="item">2. Diện tích nhà ở để đăng ký thường trú khi cho thuê, mượn, ở nhờ:</div>
+  <div class="item">Tổng số người thuê, mượn, ở nhờ: ${DOTS}</div>
+  <div class="item">Tổng số diện tích chỗ ở hợp pháp thuê, mượn, ở nhờ: ${DOTS}</div>
+  <div class="sign">
+    <div><b>XÁC NHẬN CỦA ỦY BAN NHÂN DÂN</b>(Ký tên, đóng dấu)</div>
+    <div>……, ngày …… tháng …… năm ……<b>NGƯỜI ĐỀ NGHỊ</b>${f.ho_ten ? esc(f.ho_ten) : ''}</div>
+  </div>`;
+}
+
+// ---------- Mẫu DC02 (Thông tư 118/2026/TT-BCA) ----------
+
+const DC02_REASON: Record<string, string> = {
+  mat: 'Cấp lại thẻ căn cước do bị mất thẻ.',
+  hong: 'Cấp lại thẻ căn cước do thẻ bị hư hỏng không sử dụng được.',
+  tro_lai_quoc_tich: 'Cấp lại thẻ căn cước do được trở lại quốc tịch Việt Nam.',
+};
+
+function dc02Html(p: Procedure, s: Session): string {
+  const f = s.filled;
+  const val = fieldVal(p, s);
+  const box = (on: boolean, text: string) => `<div class="item">${on ? '☑' : '☐'} ${text}</div>`;
+  const today = new Date();
+  return page(
+    p.formTitle,
+    `
+  <div class="right">Mẫu DC02 ban hành kèm theo Thông tư số 118/2026/TT-BCA<br/>ngày 29/6/2026 của Bộ trưởng Bộ Công an</div>
+  <div class="center nation">Cộng hòa xã hội chủ nghĩa Việt Nam</div>
+  <div class="center motto">Độc lập – Tự do – Hạnh phúc</div>
+  <h1>PHIẾU ĐỀ NGHỊ<br/>Giải quyết thủ tục về căn cước</h1>
+  <div class="sub">Kính gửi: ……………………………</div>
+  <h2>I. THÔNG TIN NGƯỜI ĐỀ NGHỊ</h2>
+  <div class="item">1. Họ, chữ đệm và tên khai sinh: ${val('ho_ten')}</div>
+  <div class="item">2. Ngày, tháng, năm sinh: ${val('ngay_sinh')} &nbsp;&nbsp;&nbsp; 3. Giới tính: ${val('gioi_tinh')}</div>
+  <div class="item">4. Số định danh cá nhân: ${idBoxes(f.so_dinh_danh)}</div>
+  <div class="item">5. Nơi cư trú: ${val('noi_cu_tru')}</div>
+  <h2>II. THÔNG TIN NGƯỜI ĐẠI DIỆN THỰC HIỆN THỦ TỤC (nếu có)</h2>
+  <div class="item">1. Họ, chữ đệm và tên khai sinh: ${DOTS}</div>
+  <div class="item">2. Ngày, tháng, năm sinh: ${DOTS} &nbsp;&nbsp;&nbsp; 3. Giới tính: ${DOTS}</div>
+  <div class="item">4. Số định danh cá nhân: ${idBoxes(undefined)}</div>
+  <div class="item">5. Số điện thoại liên hệ: ${DOTS} Email: ${DOTS}</div>
+  <h2>III. NỘI DUNG ĐỀ NGHỊ</h2>
+  ${box(true, '1. Cấp, cấp đổi, cấp lại thẻ căn cước')}
+  ${box(false, '2. Khai thác thông tin trong Cơ sở dữ liệu quốc gia về dân cư')}
+  ${box(false, '3. Khai thác thông tin trong Cơ sở dữ liệu căn cước')}
+  ${box(false, '4. Điều chỉnh thông tin trong Cơ sở dữ liệu quốc gia về dân cư')}
+  ${box(false, '5. Tích hợp thông tin vào thẻ căn cước')}
+  ${box(false, '6. Thu thập, cập nhật thông tin vào Cơ sở dữ liệu căn cước')}
+  <div class="item">7. Nội dung cụ thể: <span class="v">${esc(DC02_REASON[f.ly_do ?? ''] ?? 'Cấp lại thẻ căn cước.')}</span></div>
+  <h2>IV. ĐỊA CHỈ NHẬN KẾT QUẢ: ${val('dia_chi_nhan_ket_qua')}</h2>
+  <div class="sign">
+    <div><b>Ý KIẾN CỦA CHỦ THỂ THÔNG TIN</b>(để trống nếu người đề nghị tự làm)</div>
+    <div>……, ngày ${today.getDate()} tháng ${today.getMonth() + 1} năm ${today.getFullYear()}<b>NGƯỜI ĐỀ NGHỊ</b>${
+      f.ho_ten ? esc(f.ho_ten) : ''
+    }</div>
+  </div>
   <div class="page"></div>
   ${guide(p, s)}`,
   );
@@ -162,7 +276,9 @@ function tableHtml(p: Procedure, s: Session): string {
 }
 
 export function formHtml(p: Procedure, s: Session): string {
-  return p.form === 'CT01' ? ct01Html(p, s) : tableHtml(p, s);
+  if (p.form === 'CT01') return ct01Html(p, s);
+  if (p.form === 'DC02') return dc02Html(p, s);
+  return tableHtml(p, s);
 }
 
 export async function shareFormPdf(p: Procedure, s: Session): Promise<string> {

@@ -13,7 +13,7 @@ export function TextFallback({ onSubmit, disabled, compact = false }: { onSubmit
 
   const send = () => {
     const t = text.trim();
-    if (!t || disabled) return;
+    if (!t || disabled) return; // Enter không đi qua nút Gửi nên vẫn phải chặn tại đây.
     setText('');
     onSubmit(t);
   };

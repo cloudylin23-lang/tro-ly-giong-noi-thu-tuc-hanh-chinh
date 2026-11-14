@@ -1,0 +1,64 @@
+# CD server: push lên main có sửa server/ → deploy Vercel production → kiểm tra /api/health.
+# Cần 1 secret trên GitHub: VERCEL_TOKEN (tạo ở https://vercel.com/account/tokens).
+# Chưa có secret thì job tự bỏ qua, không báo lỗi.
+name: Deploy server (Vercel)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'server/**'
+      - '.github/workflows/deploy-server.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-server
+  cancel-in-progress: false
+
+env:
+  # Không phải bí mật — lấy từ server/.vercel/project.json
+  VERCEL_ORG_ID: team_peDHpXSMuitdH4nQNPz4KGYi
+  VERCEL_PROJECT_ID: prj_UkCShaAKOLYcBTMKDWgtyM71V7X6
+  PROD_URL: https://tro-ly-giong-noi-api.vercel.app
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10 # Vercel chặn deploy thì CLI có thể treo — không để job chạy mãi
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - name: Có VERCEL_TOKEN chưa?
+        id: guard
+        working-directory: .
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "::warning::Chưa có secret VERCEL_TOKEN — bỏ qua deploy."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.guard.outputs.skip != 'true'
+      - uses: actions/setup-node@v4
+        if: steps.guard.outputs.skip != 'true'
+        with:
+          node-version: 24
+      - name: Typecheck + test trước khi deploy
+        if: steps.guard.outputs.skip != 'true'
+        run: npm ci && npx tsc --noEmit && npm test
+      # Lưu ý: gói Hobby của Vercel chặn deploy khi tác giả commit (người bấm Merge) không phải
+      # chủ team. Với gói Hobby: chủ tài khoản Vercel bấm Merge, chọn "Create a merge commit".
+      - name: Deploy production
+        if: steps.guard.outputs.skip != 'true'
+        timeout-minutes: 6
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: npx vercel@65.15.0 deploy --prod --yes --token "$VERCEL_TOKEN"
+      - name: Kiểm tra /api/health
+        if: steps.guard.outputs.skip != 'true'
+        run: |
+          body=$(curl -fsS --retry 3 --retry-delay 5 "$PROD_URL/api/health")
+          echo "$body"
+          echo "$body" | grep -q '"hasKey":true' || { echo "::error::Server chạy nhưng thiếu OPENAI_API_KEY"; exit 1; }

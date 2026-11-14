@@ -42,11 +42,14 @@ async function classify(req: ClassifyRequest): Promise<ClassifyResponse> {
     `Người dùng nói: "${req.utterance.trim()}"`,
   ].join('\n');
 
+  const allowed = new Set([...ids, 'none']);
   const out = await structured<{ procedureId: string; reply: string }>({
     name: 'classify_procedure',
     schema,
     instructions: CLASSIFY_INSTRUCTIONS,
     input,
+    validate: (d): d is { procedureId: string; reply: string } =>
+      isObj(d) && typeof d.procedureId === 'string' && allowed.has(d.procedureId) && typeof d.reply === 'string',
   });
   return { procedureId: out.procedureId === 'none' ? null : out.procedureId, reply: out.reply };
 }
@@ -94,8 +97,24 @@ async function extract(req: ExtractRequest): Promise<ExtractResponse> {
     schema,
     instructions: EXTRACT_INSTRUCTIONS,
     input,
+    validate: isExtractResponse,
   });
   // Bỏ giá trị rỗng, chỉ giữ key hợp lệ
   out.values = out.values.filter((v) => keys.includes(v.key) && v.value.trim() !== '');
   return out;
+}
+
+const ACTS = new Set(['answer', 'repeat', 'dont_know', 'off_topic']);
+const isObj = (d: unknown): d is Record<string, unknown> => typeof d === 'object' && d !== null && !Array.isArray(d);
+
+/** Kiểm tra kết quả extract ở runtime (strict schema vẫn có thể bị bỏ qua khi đổi model) */
+function isExtractResponse(d: unknown): d is ExtractResponse {
+  return (
+    isObj(d) &&
+    typeof d.act === 'string' &&
+    ACTS.has(d.act) &&
+    typeof d.reply === 'string' &&
+    Array.isArray(d.values) &&
+    d.values.every((v) => isObj(v) && typeof v.key === 'string' && typeof v.value === 'string')
+  );
 }

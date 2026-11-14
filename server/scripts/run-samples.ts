@@ -1,11 +1,12 @@
 // Chạy thử prompt hàng loạt, không cần điện thoại: npm run samples
 // Sửa prompt trong prompts/ rồi chạy lại để so sánh. Đổi OPENAI_MODEL trong .env.local để so tốc độ.
-import { existsSync, readFileSync } from 'node:fs';
+import './load-env.js'; // phải đứng đầu: nạp .env.local trước khi lib/config.ts đọc env
+import { readFileSync } from 'node:fs';
 import { runTurn } from '../lib/turn.js';
-import { config } from '../lib/openai.js';
+import { assertConfig, config } from '../lib/config.js';
 import type { ClassifyResponse, ExtractResponse, FieldSpec, ProcedureBrief } from '../lib/types.js';
 
-if (existsSync('.env.local')) process.loadEnvFile('.env.local');
+assertConfig();
 
 // Dùng chính dữ liệu thủ tục của app để test sát thực tế
 const load = (name: string) =>

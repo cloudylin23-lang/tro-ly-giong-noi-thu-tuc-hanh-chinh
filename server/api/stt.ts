@@ -1,4 +1,5 @@
 import { handler, json } from '../lib/http.js';
+import { log } from '../lib/log.js';
 import { HttpError } from '../lib/openai.js';
 import { transcribe } from '../lib/stt.js';
 
@@ -13,6 +14,8 @@ export default handler(async (req) => {
   }
   const audio = form.get('audio');
   if (!(audio instanceof File)) throw new HttpError(400, 'Thiếu field "audio"');
+  log.info('stt.audio', { bytes: audio.size, type: audio.type || 'unknown' });
   const text = await transcribe(audio);
+  log.info('stt.text', { chars: text.length }); // chỉ log độ dài, không log nội dung
   return json({ text });
 });

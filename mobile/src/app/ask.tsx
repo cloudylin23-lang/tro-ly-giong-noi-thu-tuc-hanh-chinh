@@ -17,9 +17,9 @@ import { copy } from '@/copy';
 import { getProcedure } from '@/data/procedures';
 import { useVoiceInput } from '@/hooks/useVoiceInput';
 import { api, friendlyError, isRetryableError } from '@/lib/api';
-import { activeFields, applyTurn, nextField, progress, questionText, remainingFields, reopen, sayAfter, skip } from '@/lib/flow';
+import { activeFields, applyTurn, localNumberTurn, nextField, progress, questionText, remainingFields, reopen, sayAfter, skip } from '@/lib/flow';
 import { speak, stopSpeaking } from '@/lib/speech';
-import { displayable } from '@/lib/validate';
+import { displayable, maskLongDigitRuns } from '@/lib/validate';
 import { useSession } from '@/state/SessionContext';
 import { colors, layout, radius, space, touch } from '@/theme';
 
@@ -74,14 +74,17 @@ export default function Ask() {
     voice.clearError();
     setBusy(true);
     try {
-      const res = await api.extract({
-        utterance: text,
-        procedure,
-        current: field,
-        others: remainingFields(procedure, session, field.key),
-      });
+      // Số căn cước / SĐT xử lý tại máy; các câu khác che dãy số dài trước khi gửi AI.
+      const res =
+        localNumberTurn(field, text) ??
+        (await api.extract({
+          utterance: maskLongDigitRuns(text),
+          procedure,
+          current: field,
+          others: remainingFields(procedure, session, field.key),
+        }));
       if (version !== requestVersion.current) return;
-      const r = applyTurn(procedure, session, field, res);
+      const r = applyTurn(procedure, session, field, res, text);
       setReply(r.reply || null);
       spokenFor.current = r.next?.key ?? null; // câu hỏi kế đã nằm trong lời đọc dưới đây
       setSession(r.session);
@@ -112,7 +115,7 @@ export default function Ask() {
       act: 'answer',
       values: [{ key: field.key, value }],
       reply: copy.ask.choiceAccepted(label),
-    });
+    }, label);
     setHeard(null);
     voice.clearError();
     setRetryText(null);
@@ -129,7 +132,7 @@ export default function Ask() {
     choiceLocked.current = true;
     const r = applyTurn(procedure, session, field, {
       act: 'dont_know', values: [], reply: copy.ask.optionalSkipped,
-    });
+    }, '');
     setHeard(null);
     setRetryText(null);
     setSubmissionError(null);
@@ -237,6 +240,7 @@ export default function Ask() {
                 <AppText>“{heard}”</AppText>
               </Bubble>
             ) : null}
+            {voice.slow ? <Bubble who="warning">{copy.mic.slow}</Bubble> : null}
             {submissionError ? (
               <View style={styles.choices}>
                 <Bubble who="warning">{submissionError}</Bubble>
@@ -294,7 +298,7 @@ export default function Ask() {
                     disabled={inputDisabled}
                     onPress={() => {
                       setReply(null);
-                      setSession(reopen(session, f.key));
+                      setSession(reopen(procedure, session, f.key));
                     }}
                     style={({ pressed }) => [styles.item, pressed && { opacity: 0.7 }]}
                   >

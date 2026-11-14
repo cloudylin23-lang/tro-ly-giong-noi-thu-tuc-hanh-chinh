@@ -3,7 +3,7 @@
 import * as Speech from 'expo-speech';
 
 let voiceId: string | undefined;
-let voiceLoaded = false;
+let loading: Promise<void> | null = null;
 
 export async function findVietnameseVoice(): Promise<Speech.Voice | undefined> {
   const voices = await Speech.getAvailableVoicesAsync().catch(() => [] as Speech.Voice[]);
@@ -16,10 +16,17 @@ export async function findVietnameseVoice(): Promise<Speech.Voice | undefined> {
   );
 }
 
-async function ensureVoice() {
-  if (voiceLoaded) return;
-  voiceLoaded = true;
-  voiceId = (await findVietnameseVoice())?.identifier;
+// Android có thể trả danh sách giọng rỗng khi TTS chưa khởi động xong → chưa tìm thấy thì lần sau tìm lại
+function ensureVoice(): Promise<void> {
+  if (voiceId) return Promise.resolve();
+  loading ??= findVietnameseVoice()
+    .then((v) => {
+      voiceId = v?.identifier;
+    })
+    .finally(() => {
+      loading = null;
+    });
+  return loading;
 }
 
 /** Đọc một câu, resolve khi đọc xong hoặc bị dừng. */
