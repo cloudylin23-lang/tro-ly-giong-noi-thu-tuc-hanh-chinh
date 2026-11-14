@@ -11,6 +11,18 @@
   ],
   "form": "CT01",
   "formTitle": "TỜ KHAI THAY ĐỔI THÔNG TIN CƯ TRÚ",
+  "extraForms": [
+    {
+      "form": "MAU02",
+      "title": "TỜ KHAI XÁC NHẬN TÌNH TRẠNG CHỖ Ở HỢP PHÁP, DIỆN TÍCH NHÀ Ở TỐI THIỂU ĐỂ ĐĂNG KÝ THƯỜNG TRÚ, ĐĂNG KÝ TẠM TRÚ",
+      "when": {
+        "field": "giay_to_cho_o",
+        "in": [
+          "khong"
+        ]
+      }
+    }
+  ],
   "fields": [
     {
       "key": "ho_ten",
@@ -70,14 +82,11 @@
       "label": "Trường hợp chỗ ở",
       "kind": "choice",
       "question": "Nhà bác đang ở là nhà của bác, nhà của con cháu người thân, hay bác thuê, mượn, ở nhờ ạ?",
-      "hint": "ở với con trai, con gái, cháu… → nha_nguoi_than; thuê trọ, mượn nhà người quen → thue_o_nho",
+      "hint": "ở với con trai, con gái, cháu… → nha_nguoi_than; thuê trọ, mượn nhà người quen → thue_o_nho; ở ký túc xá, nhà tập thể do trường, công ty đăng ký cho cả danh sách → theo_danh_sach",
       "options": [
         {
           "value": "nha_minh",
-          "label": "Nhà của bác",
-          "documents": [
-            "Giấy tờ chứng minh nhà của bác (sổ đỏ, sổ hồng, hợp đồng mua bán…) — chỉ cần khi công an không tra được trên hệ thống"
-          ]
+          "label": "Nhà của bác"
         },
         {
           "value": "nha_nguoi_than",
@@ -92,6 +101,14 @@
           "label": "Thuê, mượn hoặc ở nhờ",
           "documents": [
             "Hợp đồng hoặc giấy cho thuê, cho mượn, cho ở nhờ (không bắt buộc công chứng, chứng thực)"
+          ]
+        },
+        {
+          "value": "theo_danh_sach",
+          "label": "Ở ký túc xá, nhà tập thể do cơ quan, công ty đăng ký theo danh sách",
+          "documents": [
+            "Văn bản đề nghị của cơ quan, tổ chức ghi rõ chỗ ở hợp pháp, kèm danh sách họ tên, ngày sinh, giới tính, số định danh cá nhân và thời hạn tạm trú của từng người",
+            "Mỗi người một tờ khai CT01"
           ]
         }
       ]
@@ -137,12 +154,83 @@
           "thue_o_nho"
         ]
       }
+    },
+    {
+      "key": "giay_to_cho_o",
+      "label": "Giấy tờ chứng minh chỗ ở",
+      "kind": "choice",
+      "question": "Nhà đó có sổ đỏ, sổ hồng hoặc giấy tờ nhà không ạ?",
+      "hint": "có sổ đỏ, sổ hồng, hợp đồng mua bán, giấy tờ nhà → co; không có, mất, chưa làm sổ → khong",
+      "options": [
+        {
+          "value": "co",
+          "label": "Có giấy tờ nhà",
+          "documents": [
+            "Giấy tờ nhà (sổ đỏ, sổ hồng, hợp đồng mua bán nhà…) — 1 bản sao, chỉ cần khi công an không tra được trên hệ thống"
+          ]
+        },
+        {
+          "value": "khong",
+          "label": "Không có giấy tờ nhà",
+          "documents": [
+            "Tờ khai xác nhận tình trạng chỗ ở hợp pháp (Mẫu số 02, Nghị định 58/2026/NĐ-CP) — app đã điền sẵn. Bác mang lên Ủy ban nhân dân xã, phường nơi có nhà để xin xác nhận TRƯỚC, rồi nộp kèm hồ sơ"
+          ]
+        }
+      ],
+      "when": {
+        "field": "loai_cho_o",
+        "in": [
+          "nha_minh",
+          "nha_nguoi_than"
+        ]
+      }
+    },
+    {
+      "key": "noi_cu_tru_hien_nay",
+      "label": "Nơi cư trú hiện nay (Mẫu 02)",
+      "kind": "text",
+      "question": "Để làm giấy xác nhận chỗ ở, bác cho con biết hiện bác đang đăng ký thường trú ở địa chỉ nào ạ?",
+      "hint": "địa chỉ thường trú hiện tại của người khai; không có thường trú thì ghi nơi tạm trú hoặc nơi ở hiện tại",
+      "when": {
+        "field": "giay_to_cho_o",
+        "in": [
+          "khong"
+        ]
+      }
+    },
+    {
+      "key": "dien_tich_san",
+      "label": "Diện tích sàn nhà ở (Mẫu 02)",
+      "kind": "text",
+      "question": "Nhà đó rộng khoảng bao nhiêu mét vuông sàn ạ? Nhà nhiều tầng thì bác cộng cả các tầng. Không nhớ thì bác cứ nói không nhớ nhé.",
+      "hint": "ghi số kèm đơn vị, ví dụ \"60 m²\"; không rõ → act=dont_know",
+      "when": {
+        "field": "giay_to_cho_o",
+        "in": [
+          "khong"
+        ]
+      }
+    },
+    {
+      "key": "so_nguoi_thuong_tru",
+      "label": "Số người đang đăng ký thường trú ở nhà đó (Mẫu 02)",
+      "kind": "text",
+      "question": "Hiện nay có bao nhiêu người đang đăng ký thường trú ở nhà đó ạ?",
+      "hint": "ghi số người, ví dụ \"4 người\"",
+      "when": {
+        "field": "giay_to_cho_o",
+        "in": [
+          "khong"
+        ]
+      }
     }
   ],
   "documents": [
     "Tờ khai thay đổi thông tin cư trú (Mẫu CT01, Thông tư 116/2026/TT-BCA) — app đã chuẩn bị sẵn nội dung để bác chép sang",
     "Thẻ căn cước hoặc tài khoản VNeID để cán bộ đối chiếu",
-    "Lưu ý: giấy tờ nào công an đã tra được trên hệ thống hoặc VNeID thì bác không phải nộp lại"
+    "Lưu ý: giấy tờ nào công an đã tra được trên hệ thống hoặc VNeID thì bác không phải nộp lại",
+    "Nếu người đăng ký chưa đủ 18 tuổi: cha, mẹ hoặc người giám hộ ghi ý kiến đồng ý vào tờ khai (hoặc xác nhận trên VNeID)",
+    "Trường hợp riêng: người Việt Nam định cư ở nước ngoài về sinh sống (nhập cảnh bằng hộ chiếu nước ngoài) dùng Mẫu CT02 thay cho CT01, kèm 1 ảnh 4x6"
   ],
   "office": {
     "name": "Công an xã, phường nơi bác đang ở",
@@ -152,10 +240,11 @@
     "fee": "15.000đ nộp trực tiếp · 7.000đ nộp qua Cổng Dịch vụ công · Miễn phí nếu nộp qua VNeID (đến hết 31/12/2026)",
     "note": "Bác có thể nhờ con cháu nộp online qua ứng dụng VNeID, hiện đang được miễn lệ phí."
   },
-  "source": "Quyết định 5860/QĐ-BCA-C06 ngày 16/9/2026 (công bố thủ tục cư trú); Thông tư 116/2026/TT-BCA (biểu mẫu CT01, hiệu lực 01/7/2026); Luật Cư trú 2020. Tổng hợp qua LuatVietnam (bài 02/11/2026) và Báo Lào Cai. Truy cập 13/11/2026.",
+  "source": "Quyết định 5860/QĐ-BCA-C06 ngày 16/9/2026 (công bố thủ tục cư trú); Thông tư 116/2026/TT-BCA (Mẫu CT01, CT02, hiệu lực 01/7/2026); Nghị định 58/2026/NĐ-CP (Mẫu số 01, 02 Phụ lục IV); Luật Cư trú 2020. Tổng hợp qua LuatVietnam (bài 02/11/2026) và Báo Lào Cai. Truy cập 14/11/2026.",
   "sourceUrls": [
     "https://luatvietnam.vn/hanh-chinh/huong-dan-thu-tuc-dang-ky-tam-tru-tai-cong-an-cap-xa-theo-quyet-dinh-5860-570-114910-article.html",
     "https://baolaocai.vn/huong-dan-thu-tuc-dang-ky-tam-tru-tai-cong-an-cap-xa-post912742.html",
-    "https://congbao.chinhphu.vn/van-ban/thong-tu-so-116-2026-tt-bca-470078.htm"
+    "https://congbao.chinhphu.vn/van-ban/thong-tu-so-116-2026-tt-bca-470078.htm",
+    "https://xdcs.cdnchinhphu.vn/446259493575335936/2026/2/24/58nd-signed-17719193053761644276754.pdf"
   ]
 }

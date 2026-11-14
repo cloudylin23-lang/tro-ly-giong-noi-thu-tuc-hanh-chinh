@@ -7,7 +7,8 @@ import { fileURLToPath } from 'node:url';
 
 const DIR = fileURLToPath(new URL('../src/data/procedures/', import.meta.url));
 const KINDS = ['text', 'date', 'id12', 'phone', 'gender', 'email', 'choice'];
-const FORMS = ['CT01'];
+const FORMS = ['CT01', 'DC02'];
+const EXTRA_FORMS = ['MAU02'];
 
 const errors = [];
 const warnings = [];
@@ -79,6 +80,15 @@ for (const file of files) {
       }
     }
     seen.set(f.key, f);
+  }
+
+  for (const [i, x] of (p.extraForms ?? []).entries()) {
+    const at = `extraForms[${i}]`;
+    if (!EXTRA_FORMS.includes(x.form)) err(file, `${at}: form "${x.form}" không hỗ trợ (chỉ ${EXTRA_FORMS.join(', ')})`);
+    if (!isStr(x.title)) err(file, `${at}: thiếu title`);
+    const dep = seen.get(x.when?.field);
+    if (!dep || dep.kind !== 'choice') err(file, `${at}: when.field "${x.when?.field}" phải là field choice`);
+    else for (const v of x.when.in ?? []) if (!dep.options.some((o) => o.value === v)) err(file, `${at}: when.in có "${v}" không nằm trong options của ${dep.key}`);
   }
 }
 
