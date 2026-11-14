@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
-import { colors, radius, space } from '@/theme';
+import { colors, radius, space, touch } from '@/theme';
 import { AppText } from './AppText';
 
 /** Khung lời nói của trợ lý (bấm để nghe lại) hoặc của người dùng. */
@@ -18,7 +18,7 @@ export function Bubble({
       onPress={onPress}
       disabled={!onPress}
       accessibilityRole={onPress ? 'button' : 'text'}
-      style={[styles.base, styles[who]]}
+      style={[styles.base, styles[who], onPress && { minHeight: touch, justifyContent: 'center' }]}
     >
       {typeof children === 'string' ? (
         <AppText variant={who === 'assistant' ? 'title' : 'body'}>{children}</AppText>
@@ -32,6 +32,6 @@ export function Bubble({
 const styles = StyleSheet.create({
   base: { borderRadius: radius, padding: space.md },
   assistant: { backgroundColor: colors.surface, borderWidth: 2, borderColor: colors.border },
-  user: { backgroundColor: '#EAF1FC', alignSelf: 'stretch' },
-  warning: { backgroundColor: colors.warningBg },
+  user: { backgroundColor: colors.primarySoft, alignSelf: 'stretch' },
+  warning: { backgroundColor: colors.warningBg, borderLeftWidth: 4, borderLeftColor: colors.danger },
 });

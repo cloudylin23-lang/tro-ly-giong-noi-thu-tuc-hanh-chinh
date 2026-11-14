@@ -1,9 +1,11 @@
 // Màn 3 — Hỏi đáp từng bước: mỗi lần chỉ hỏi 1 câu, trả lời bằng giọng nói hoặc gõ
 import { Redirect, router } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { useEffect, useRef, useState, type ComponentRef } from 'react';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppText } from '@/components/AppText';
 import { BigButton } from '@/components/BigButton';
+import { CancelProcedure } from '@/components/CancelProcedure';
 import { Bubble } from '@/components/Bubble';
 import { MicButton } from '@/components/MicButton';
 import { ProgressBar } from '@/components/ProgressBar';
@@ -12,12 +14,12 @@ import { TextFallback } from '@/components/TextFallback';
 import { copy } from '@/copy';
 import { getProcedure } from '@/data/procedures';
 import { useVoiceInput } from '@/hooks/useVoiceInput';
-import { api, friendlyError } from '@/lib/api';
-import { activeFields, applyTurn, nextField, progress, remainingFields, reopen, sayAfter, skip } from '@/lib/flow';
-import { speak } from '@/lib/speech';
+import { api, friendlyError, isRetryableError } from '@/lib/api';
+import { activeFields, applyTurn, nextField, progress, questionText, remainingFields, reopen, sayAfter, skip } from '@/lib/flow';
+import { speak, stopSpeaking } from '@/lib/speech';
 import { displayable } from '@/lib/validate';
 import { useSession } from '@/state/SessionContext';
-import { colors, radius, space } from '@/theme';
+import { colors, layout, radius, space, touch } from '@/theme';
 
 export default function Ask() {
   const { session, setSession } = useSession();
@@ -27,23 +29,47 @@ export default function Ask() {
   const [busy, setBusy] = useState(false);
   const [heard, setHeard] = useState<string | null>(null);
   const [reply, setReply] = useState<string | null>(null);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const [retryText, setRetryText] = useState<{ fieldKey: string; text: string } | null>(null);
   const spokenFor = useRef<string | null>(null);
+  const choiceLocked = useRef(false);
+  const requestPending = useRef(false);
+  const requestVersion = useRef(0);
+  const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const cancelled = useRef(false);
+
+  useEffect(() => {
+    choiceLocked.current = false;
+    requestPending.current = false;
+    setBusy(false);
+    setRetryText(null);
+    setSubmissionError(null);
+    scroll.current?.scrollTo({ y: 0, animated: false });
+    return () => { requestVersion.current++; };
+  }, [field?.key]);
 
   // Field mới xuất hiện mà chưa được đọc (lần đầu vào, bấm sửa, bấm bỏ qua) → đọc câu hỏi
   useEffect(() => {
     if (!field || spokenFor.current === field.key) return;
     spokenFor.current = field.key;
-    void speak(field.question);
+    void speak(questionText(field));
   }, [field]);
 
   // Hết field → sang màn kết quả
   useEffect(() => {
-    if (procedure && session && !field) router.replace('/result');
-  }, [procedure, session, field]);
+    if (procedure && session && !field && !cancelOpen && !cancelled.current) router.replace('/result');
+  }, [procedure, session, field, cancelOpen]);
 
   const handleText = async (text: string) => {
-    if (!procedure || !session || !field) return;
+    if (cancelled.current || !procedure || !session || !field || requestPending.current || choiceLocked.current) return;
+    requestPending.current = true;
+    const version = requestVersion.current;
     setHeard(text);
+    setReply(null);
+    setSubmissionError(null);
+    setRetryText(null);
+    voice.clearError();
     setBusy(true);
     try {
       const res = await api.extract({
@@ -52,6 +78,7 @@ export default function Ask() {
         current: field,
         others: remainingFields(procedure, session, field.key),
       });
+      if (version !== requestVersion.current) return;
       const r = applyTurn(procedure, session, field, res);
       setReply(r.reply || null);
       spokenFor.current = r.next?.key ?? null; // câu hỏi kế đã nằm trong lời đọc dưới đây
@@ -59,97 +86,262 @@ export default function Ask() {
       // Còn câu hỏi → đọc xác nhận + câu kế. Hết → màn kết quả sẽ tự đọc tóm tắt.
       if (r.next) void speak(sayAfter(r));
     } catch (err) {
+      if (version !== requestVersion.current) return;
       const msg = friendlyError(err);
-      setReply(msg);
+      setSubmissionError(msg);
+      if (isRetryableError(err)) setRetryText({ fieldKey: field.key, text });
       void speak(msg);
     } finally {
-      setBusy(false);
+      if (version === requestVersion.current) {
+        requestPending.current = false;
+        setBusy(false);
+      }
     }
   };
 
-  const voice = useVoiceInput(handleText);
+  const voice = useVoiceInput(handleText, field?.key);
+
+  const chooseAnswer = (value: string, label: string) => {
+    if (!procedure || !session || !field || requestPending.current || voice.state !== 'idle' || choiceLocked.current) return;
+    choiceLocked.current = true;
+
+    // Lựa chọn có sẵn không cần AI; applyTurn vẫn kiểm tra qua validate.ts.
+    const r = applyTurn(procedure, session, field, {
+      act: 'answer',
+      values: [{ key: field.key, value }],
+      reply: copy.ask.choiceAccepted(label),
+    });
+    setHeard(null);
+    voice.clearError();
+    setRetryText(null);
+    setSubmissionError(null);
+    setReply(r.reply || null);
+    spokenFor.current = r.next?.key ?? null;
+    setSession(r.session);
+    if (r.next) void speak(sayAfter(r));
+    if (r.next?.key === field.key) choiceLocked.current = false;
+  };
+
+  const skipOptional = () => {
+    if (!procedure || !session || !field?.optional || requestPending.current || voice.state !== 'idle' || choiceLocked.current) return;
+    choiceLocked.current = true;
+    const r = applyTurn(procedure, session, field, {
+      act: 'dont_know', values: [], reply: copy.ask.optionalSkipped,
+    });
+    setHeard(null);
+    setRetryText(null);
+    setSubmissionError(null);
+    voice.clearError();
+    setReply(r.reply);
+    spokenFor.current = r.next?.key ?? null;
+    setSession(r.session);
+    if (r.next) void speak(sayAfter(r));
+  };
+
+  const cancelControl = (
+    <CancelProcedure
+      open={cancelOpen}
+      onOpenChange={setCancelOpen}
+      onConfirm={() => {
+        if (cancelled.current) return;
+        cancelled.current = true;
+        requestVersion.current++;
+        choiceLocked.current = true;
+        void stopSpeaking();
+        setSession(null);
+        router.dismissTo('/');
+      }}
+    />
+  );
 
   if (!procedure || !session) return <Redirect href="/" />;
-  if (!field) return <Screen>{null}</Screen>;
+  if (!field) return <Screen footer={cancelControl}>{null}</Screen>;
 
   const p = progress(procedure, session);
+  const inputDisabled = busy || voice.state !== 'idle';
+  const choices = field.kind === 'gender'
+    ? copy.ask.genderOptions
+    : field.kind === 'choice'
+      ? (field.options ?? []).map(({ value, label }) => ({
+          value,
+          label: field.key === 'loai_cho_o' ? copy.ask.housingChoiceLabels[value] ?? label : label,
+        }))
+      : [];
   const answered = activeFields(procedure, session).filter((f) => f.key in session.filled || session.skipped.includes(f.key));
 
   return (
-    <Screen
-      footer={
-        <View style={styles.row}>
-          <View style={styles.flex}>
-            <BigButton variant="secondary" label={`🔁  ${copy.ask.repeatQuestion}`} onPress={() => void speak(field.question)} />
+    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+      <ScrollView ref={scroll} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <View style={styles.sheet}>
+          <View style={styles.header}>
+            <AppText variant="title" style={styles.title}>{procedure.name}</AppText>
+            <View style={styles.progress}>
+              <ProgressBar {...p} />
+            </View>
           </View>
-        </View>
-      }
-    >
-      <ProgressBar {...p} />
-      <AppText variant="muted">{procedure.name}</AppText>
 
-      {reply ? (
-        <AppText variant="body" style={styles.reply}>
-          {reply}
-        </AppText>
-      ) : null}
-      <Bubble onPress={() => void speak(field.question)}>{field.question}</Bubble>
+          <View style={styles.section}>
+            <View style={styles.fieldHeader}>
+              <AppText variant="title">{field.label}</AppText>
+              {field.optional ? <AppText variant="small" style={styles.optional}>{copy.ask.optionalLabel}</AppText> : null}
+            </View>
 
-      <MicButton state={voice.state} busy={busy} onPress={voice.toggle} durationMs={voice.durationMs} />
+            {reply ? (
+              <AppText variant="body" style={styles.reply}>
+                {reply}
+              </AppText>
+            ) : null}
+            <Bubble onPress={inputDisabled ? undefined : () => void speak(questionText(field))}>{questionText(field)}</Bubble>
+            <AppText variant="muted">{copy.ask.autoNextHint}</AppText>
+            {field.optional ? (
+              <BigButton variant="secondary" label={copy.ask.none} disabled={inputDisabled} onPress={skipOptional} />
+            ) : null}
 
-      {heard ? (
-        <Bubble who="user">
-          <AppText variant="muted">{copy.ask.youSaid}</AppText>
-          <AppText>“{heard}”</AppText>
-        </Bubble>
-      ) : null}
-      {voice.error ? <Bubble who="warning">{voice.error}</Bubble> : null}
+            {choices.length > 0 ? (
+              <View style={styles.choices}>
+                <AppText variant="muted">{copy.ask.chooseAnswer}</AppText>
+                {choices.map((option) => (
+                  <BigButton
+                    key={`${field.key}:${option.value}`}
+                    variant="secondary"
+                    label={option.label}
+                    disabled={inputDisabled}
+                    onPress={() => chooseAnswer(option.value, option.label)}
+                  />
+                ))}
+              </View>
+            ) : null}
+          </View>
 
-      <TextFallback onSubmit={handleText} disabled={busy} />
-      <BigButton
-        variant="ghost"
-        label={copy.ask.skip}
-        disabled={busy}
-        onPress={() => {
-          setReply(null);
-          setSession(skip(session, field.key));
-        }}
-      />
+          <View style={styles.section}>
+            <MicButton
+              appearance="recorder"
+              state={voice.state}
+              busy={busy}
+              onPress={() => {
+                if (voice.state === 'idle') {
+                  setSubmissionError(null);
+                  setRetryText(null);
+                }
+                voice.toggle();
+              }}
+              durationMs={voice.durationMs}
+            />
 
-      {answered.length > 0 ? (
-        <View style={styles.filled}>
-          <AppText variant="muted">{copy.ask.filledTitle}</AppText>
-          {answered.map((f) => {
-            const v = session.filled[f.key];
-            return (
-              <Pressable
-                key={f.key}
-                accessibilityRole="button"
-                accessibilityLabel={`Sửa ${f.label}`}
-                disabled={busy}
+            {heard ? (
+              <Bubble who="user">
+                <AppText variant="muted">{copy.ask.youSaid}</AppText>
+                <AppText>“{heard}”</AppText>
+              </Bubble>
+            ) : null}
+            {submissionError ? (
+              <View style={styles.choices}>
+                <Bubble who="warning">{submissionError}</Bubble>
+                {retryText?.fieldKey === field.key ? (
+                  <BigButton label={copy.errors.retry} disabled={inputDisabled} onPress={() => void handleText(retryText.text)} />
+                ) : null}
+              </View>
+            ) : null}
+            {voice.error ? (
+              <View style={styles.choices}>
+                <Bubble who="warning">{voice.error}</Bubble>
+                {voice.canRetry ? (
+                  <BigButton label={copy.errors.retry} disabled={inputDisabled} onPress={() => void voice.retry()} />
+                ) : null}
+              </View>
+            ) : null}
+
+            <TextFallback
+              key={field.key}
+              onSubmit={(text) => {
+                if (!inputDisabled) void handleText(text);
+              }}
+              disabled={inputDisabled}
+            />
+            {!field.optional ? (
+              <BigButton
+                variant="ghost"
+                label={copy.ask.skip}
+                disabled={inputDisabled}
                 onPress={() => {
                   setReply(null);
-                  setSession(reopen(session, f.key));
+                  setSession(skip(session, field.key));
                 }}
-                style={({ pressed }) => [styles.item, pressed && { opacity: 0.7 }]}
-              >
-                <AppText variant="muted">{f.label}</AppText>
-                <AppText style={styles.value}>{v ? displayable(f, v) : copy.ask.skippedValue}</AppText>
-              </Pressable>
-            );
-          })}
+              />
+            ) : null}
+            <BigButton variant="secondary" icon="repeat" label={copy.ask.repeatQuestion} disabled={inputDisabled} onPress={() => void speak(questionText(field))} />
+          </View>
+
+          {answered.length > 0 ? (
+            <View style={styles.filled}>
+              <AppText variant="muted">{copy.ask.filledTitle}</AppText>
+              {answered.map((f) => {
+                const v = session.filled[f.key];
+                return (
+                  <Pressable
+                    key={f.key}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Sửa ${f.label}`}
+                    disabled={inputDisabled}
+                    onPress={() => {
+                      setReply(null);
+                      setSession(reopen(session, f.key));
+                    }}
+                    style={({ pressed }) => [styles.item, pressed && { opacity: 0.7 }]}
+                  >
+                    <AppText variant="muted">{f.label}</AppText>
+                    <AppText style={styles.value}>{v ? displayable(f, v) : f.optional ? copy.ask.optionalEmpty : copy.ask.skippedValue}</AppText>
+                  </Pressable>
+                );
+              })}
+            </View>
+          ) : null}
         </View>
-      ) : null}
-    </Screen>
+      </ScrollView>
+      <View style={styles.footer}>
+        <View style={styles.footerContent}>{cancelControl}</View>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', gap: space.sm },
-  flex: { flex: 1 },
+  safe: { flex: 1, backgroundColor: colors.bg },
+  footer: { paddingHorizontal: space.sm, paddingBottom: space.sm },
+  footerContent: { width: '100%', maxWidth: layout.pageWidth, alignSelf: 'center' },
+  content: {
+    flexGrow: 1,
+    alignItems: 'center',
+    paddingHorizontal: space.sm,
+    paddingTop: space.lg,
+    paddingBottom: space.sm,
+  },
+  sheet: {
+    flexGrow: 1,
+    width: '100%',
+    maxWidth: layout.pageWidth,
+    backgroundColor: colors.surface,
+    borderRadius: space.xl,
+    paddingHorizontal: space.md,
+    paddingVertical: space.lg,
+    gap: space.xl,
+  },
+  header: { gap: space.lg },
+  title: { textAlign: 'center' },
+  progress: {
+    borderRadius: radius,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: space.md,
+  },
+  section: { gap: space.md },
+  fieldHeader: { gap: space.sm, alignItems: 'flex-start' },
+  optional: { backgroundColor: colors.primarySoft, borderRadius: space.sm, paddingHorizontal: space.sm, paddingVertical: space.xs },
+  choices: { gap: space.sm },
   reply: { color: colors.success, fontWeight: '700' },
-  filled: { gap: space.sm, marginTop: space.md },
+  filled: { gap: space.sm, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: space.lg },
   item: {
+    minHeight: touch,
     backgroundColor: colors.surface,
     borderRadius: radius,
     borderWidth: 1,

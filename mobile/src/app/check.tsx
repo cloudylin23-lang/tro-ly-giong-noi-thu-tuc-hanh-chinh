@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { AppText } from '@/components/AppText';
 import { BigButton } from '@/components/BigButton';
+import { Icon } from '@/components/Icon';
 import { MicButton } from '@/components/MicButton';
 import { Screen } from '@/components/Screen';
 import { useVoiceInput } from '@/hooks/useVoiceInput';
@@ -61,22 +62,23 @@ export default function Check() {
       <BigButton variant="ghost" label="Kiểm tra lại máy chủ" onPress={checkServer} />
 
       <Row title="2. Giọng đọc tiếng Việt" status={voice} />
-      <BigButton variant="ghost" label="🔊 Nghe thử" onPress={() => void speak('Bác cho con biết ngày sinh ạ?')} />
+      <BigButton variant="ghost" icon="volume" label="Nghe thử" onPress={() => void speak('Bác cho con biết ngày sinh ạ?')} />
 
       <Row title="3. Micro + nhận giọng nói" status={stt} />
-      <MicButton state={mic.state} onPress={mic.toggle} durationMs={mic.durationMs} />
+      <MicButton appearance="recorder" state={mic.state} onPress={mic.toggle} durationMs={mic.durationMs} />
     </Screen>
   );
 }
 
 function Row({ title, status }: { title: string; status: Status }) {
   const bg = status.ok === null ? colors.surface : status.ok ? colors.successBg : colors.warningBg;
-  const icon = status.ok === null ? '⏳' : status.ok ? '✅' : '⚠️';
+  const icon = status.ok === null ? 'hourglass' : status.ok ? 'check' : 'warning';
   return (
     <View style={[styles.row, { backgroundColor: bg }]}>
-      <AppText style={styles.title}>
-        {icon} {title}
-      </AppText>
+      <View style={styles.heading}>
+        <Icon name={icon} color={status.ok === false ? colors.danger : colors.text} />
+        <AppText style={styles.title}>{title}</AppText>
+      </View>
       <AppText variant="muted">{status.text}</AppText>
     </View>
   );
@@ -84,5 +86,6 @@ function Row({ title, status }: { title: string; status: Status }) {
 
 const styles = StyleSheet.create({
   row: { borderRadius: radius, borderWidth: 1, borderColor: colors.border, padding: space.md, gap: 4 },
-  title: { fontWeight: '700' },
+  heading: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  title: { flex: 1, fontWeight: '700' },
 });

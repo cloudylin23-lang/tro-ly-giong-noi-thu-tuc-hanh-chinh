@@ -9,11 +9,11 @@ export function TextFallback({ onSubmit, disabled }: { onSubmit: (text: string) 
   const [open, setOpen] = useState(false);
   const [text, setText] = useState('');
 
-  if (!open) return <BigButton variant="ghost" label={`⌨️  ${copy.home.typeInstead}`} onPress={() => setOpen(true)} />;
+  if (!open) return <BigButton variant="ghost" icon="keyboard" label={copy.home.typeInstead} disabled={disabled} onPress={() => setOpen(true)} />;
 
   const send = () => {
     const t = text.trim();
-    if (!t) return;
+    if (!t || disabled) return;
     setText('');
     onSubmit(t);
   };
@@ -22,6 +22,7 @@ export function TextFallback({ onSubmit, disabled }: { onSubmit: (text: string) 
     <View style={styles.wrap}>
       <TextInput
         value={text}
+        editable={!disabled}
         onChangeText={setText}
         placeholder="Gõ câu trả lời…"
         placeholderTextColor={colors.textMuted}

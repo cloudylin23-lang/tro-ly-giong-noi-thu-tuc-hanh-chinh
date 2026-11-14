@@ -21,6 +21,11 @@ export class ApiError extends Error {
 
 export const apiBaseUrl = BASE_URL;
 
+/** Lỗi kết nối cho phép người dùng bấm Thử lại. */
+export function isRetryableError(err: unknown): boolean {
+  return err instanceof ApiError && (err.kind === 'network' || err.kind === 'timeout');
+}
+
 /** Câu báo lỗi dễ hiểu cho người dùng */
 export function friendlyError(err: unknown): string {
   if (err instanceof ApiError) {
