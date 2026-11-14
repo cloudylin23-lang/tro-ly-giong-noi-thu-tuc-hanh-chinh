@@ -1,5 +1,5 @@
 import { config } from './config.js';
-import { errorFields, log, newRequestId, withRequest } from './log.js';
+import { errorFields, log, newRequestId, requestTotals, withRequest } from './log.js';
 import { HttpError } from './openai.js';
 
 const CORS = {
@@ -33,11 +33,16 @@ export function handler(fn: (req: Request) => Promise<Response>) {
         try {
           checkToken(req);
           res = await fn(req);
-          log.info('request', { status: res.status, ms: Date.now() - started });
+          log.info('request', { status: res.status, ms: Date.now() - started, ...requestTotals() });
         } catch (err) {
           const status = err instanceof HttpError ? err.status : 500;
           const message = err instanceof Error ? err.message : String(err);
-          (status >= 500 ? log.error : log.warn)('request', { status, ms: Date.now() - started, ...errorFields(err) });
+          (status >= 500 ? log.error : log.warn)('request', {
+            status,
+            ms: Date.now() - started,
+            ...requestTotals(),
+            ...errorFields(err),
+          });
           res = json({ error: message, requestId: reqId }, status);
         }
         res.headers.set('x-request-id', reqId);

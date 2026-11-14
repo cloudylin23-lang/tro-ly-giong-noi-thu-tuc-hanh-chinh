@@ -1,6 +1,7 @@
 import OpenAI, { APIConnectionError, APIError } from 'openai';
 import { config, configProblems } from './config.js';
-import { errorFields, log } from './log.js';
+import { addToRequestTotal, errorFields, log } from './log.js';
+import { estimateCostUsd, normalizeUsage } from './pricing.js';
 
 export { config } from './config.js';
 
@@ -72,6 +73,26 @@ interface Attempt {
   model: string;
   timeoutMs: number;
   isFallback: boolean;
+  startedAt: number;
+}
+
+/**
+ * Ghi 1 dòng log cho mỗi lần gọi OpenAI thành công: model, token, chi phí ước tính.
+ * Cộng dồn vào tổng của request (hiện ở dòng log "request").
+ */
+export function recordUsage(op: 'llm' | 'stt', a: Attempt, usage: unknown): void {
+  const u = normalizeUsage(usage);
+  const costUsd = estimateCostUsd(a.model, u);
+  log.info('openai.call', {
+    op,
+    model: a.model,
+    attempt: a.isFallback ? 'fallback' : 'primary',
+    ms: Date.now() - a.startedAt,
+    ...u,
+    costUsd,
+  });
+  if (costUsd !== null) addToRequestTotal('openaiCostUsd', costUsd);
+  addToRequestTotal('openaiCalls', 1);
 }
 
 /**
@@ -80,12 +101,12 @@ interface Attempt {
  */
 export async function withFallback<T>(
   op: 'llm' | 'stt',
-  primary: Omit<Attempt, 'isFallback'>,
-  fallback: Omit<Attempt, 'isFallback'> | null,
+  primary: Pick<Attempt, 'model' | 'timeoutMs'>,
+  fallback: Pick<Attempt, 'model' | 'timeoutMs'> | null,
   call: (a: Attempt) => Promise<T>,
 ): Promise<T> {
-  const run = async (a: Attempt) => {
-    const started = Date.now();
+  const run = async (p: Pick<Attempt, 'model' | 'timeoutMs'>, isFallback: boolean) => {
+    const a: Attempt = { ...p, isFallback, startedAt: Date.now() };
     try {
       return await call(a);
     } catch (err) {
@@ -95,7 +116,7 @@ export async function withFallback<T>(
         model: a.model,
         attempt: a.isFallback ? 'fallback' : 'primary',
         kind,
-        ms: Date.now() - started,
+        ms: Date.now() - a.startedAt,
         ...errorFields(err),
       });
       throw Object.assign(err instanceof Error ? err : new Error(String(err)), { failureKind: kind });
@@ -103,14 +124,14 @@ export async function withFallback<T>(
   };
 
   try {
-    return await run({ ...primary, isFallback: false });
+    return await run(primary, false);
   } catch (err) {
     const kind = (err as { failureKind: FailureKind }).failureKind;
     const canFallback = RETRYABLE.has(kind) && fallback && fallback.model !== primary.model;
     if (!canFallback) throw toHttpError(err, kind);
     log.info('openai.fallback', { op, from: primary.model, to: fallback.model, reason: kind });
     try {
-      return await run({ ...fallback, isFallback: true });
+      return await run(fallback, true);
     } catch (err2) {
       throw toHttpError(err2, (err2 as { failureKind: FailureKind }).failureKind);
     }
@@ -132,7 +153,8 @@ export async function structured<T>(opts: {
     'llm',
     { model: config.llmModel, timeoutMs: config.llmTimeoutMs },
     { model: config.llmFallbackModel, timeoutMs: config.llmFallbackTimeoutMs },
-    async ({ model, timeoutMs, isFallback }) => {
+    async (a) => {
+      const { model, timeoutMs, isFallback } = a;
       const res = await openai().responses.create(
         {
           model,
@@ -147,6 +169,7 @@ export async function structured<T>(opts: {
         },
         { timeout: timeoutMs, maxRetries: 0 },
       );
+      recordUsage('llm', a, res.usage); // tính cả khi output sai định dạng — vẫn tốn tiền
       // Sai định dạng → HttpError 502 → classifyError = 'model' → thử model dự phòng
       return parseOutput(res.output_text, opts.validate);
     },

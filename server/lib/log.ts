@@ -33,6 +33,20 @@ export function addLogFields(fields: Fields): void {
   if (ctx) Object.assign(ctx.fields, fields);
 }
 
+/** Cộng dồn số cho request hiện tại (vd tổng chi phí OpenAI) — hiện ở dòng log "request" cuối. */
+const totals = new WeakMap<RequestContext, Record<string, number>>();
+export function addToRequestTotal(name: string, delta: number): void {
+  const ctx = store.getStore();
+  if (!ctx) return;
+  const t = totals.get(ctx) ?? {};
+  t[name] = Math.round(((t[name] ?? 0) + delta) * 1e8) / 1e8;
+  totals.set(ctx, t);
+}
+export const requestTotals = (): Record<string, number> => {
+  const ctx = store.getStore();
+  return (ctx && totals.get(ctx)) || {};
+};
+
 function write(level: Level, msg: string, fields?: Fields): void {
   const ctx = store.getStore();
   const line = JSON.stringify({

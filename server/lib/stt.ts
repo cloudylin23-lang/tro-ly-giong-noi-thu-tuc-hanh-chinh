@@ -1,4 +1,4 @@
-import { config, HttpError, openai, withFallback } from './openai.js';
+import { config, HttpError, openai, recordUsage, withFallback } from './openai.js';
 
 // Gợi ý từ vựng giúp STT nghe đúng thuật ngữ hành chính
 const VOCAB_PROMPT =
@@ -14,11 +14,12 @@ export async function transcribe(file: File): Promise<string> {
     'stt',
     { model: config.sttModel, timeoutMs: config.sttTimeoutMs },
     { model: config.sttFallbackModel, timeoutMs: config.sttFallbackTimeoutMs },
-    async ({ model, timeoutMs }) => {
+    async (a) => {
       const res = await openai().audio.transcriptions.create(
-        { file, model, language: 'vi', prompt: VOCAB_PROMPT, response_format: 'json' },
-        { timeout: timeoutMs, maxRetries: 0 },
+        { file, model: a.model, language: 'vi', prompt: VOCAB_PROMPT, response_format: 'json' },
+        { timeout: a.timeoutMs, maxRetries: 0 },
       );
+      recordUsage('stt', a, res.usage);
       return res.text.trim();
     },
   );
