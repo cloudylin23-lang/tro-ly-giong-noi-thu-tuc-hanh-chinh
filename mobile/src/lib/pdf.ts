@@ -281,8 +281,14 @@ export function formHtml(p: Procedure, s: Session): string {
   return tableHtml(p, s);
 }
 
-export async function shareFormPdf(p: Procedure, s: Session): Promise<string> {
+/** Chỉ tạo file PDF (A4), trả về uri — dùng cho cả nút PDF và nút "Gửi cho con cháu" */
+export async function makeFormPdf(p: Procedure, s: Session): Promise<string> {
   const { uri } = await Print.printToFileAsync({ html: formHtml(p, s), width: 595, height: 842 }); // A4
+  return uri;
+}
+
+export async function shareFormPdf(p: Procedure, s: Session): Promise<string> {
+  const uri = await makeFormPdf(p, s);
   if (await Sharing.isAvailableAsync()) {
     await Sharing.shareAsync(uri, { mimeType: 'application/pdf', UTI: '.pdf', dialogTitle: p.formTitle });
   }
