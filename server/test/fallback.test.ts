@@ -70,6 +70,19 @@ describe('LLM — model dự phòng', () => {
     expect(models()).toEqual([config.llmModel, config.llmFallbackModel]);
   });
 
+  it('model chính trả rỗng (output_text = "") → thử model dự phòng', async () => {
+    fake.responses
+      .mockResolvedValueOnce({ output_text: '', status: 'incomplete' })
+      .mockResolvedValueOnce(llmOutput({ ok: true }));
+    await expect(ask()).resolves.toEqual({ ok: true });
+    expect(models()).toEqual([config.llmModel, config.llmFallbackModel]);
+  });
+
+  it('cả 2 model đều trả rỗng → 502', async () => {
+    fake.responses.mockResolvedValue({ output_text: '', status: 'incomplete' });
+    await expect(ask()).rejects.toMatchObject({ status: 502 });
+  });
+
   it('model chính trả sai định dạng → thử model dự phòng', async () => {
     fake.responses.mockResolvedValueOnce(llmOutput('không phải json')).mockResolvedValueOnce(llmOutput({ ok: true }));
     await expect(ask()).resolves.toEqual({ ok: true });

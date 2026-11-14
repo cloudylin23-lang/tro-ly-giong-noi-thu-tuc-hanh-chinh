@@ -31,7 +31,7 @@ Mọi biến môi trường đọc ở **một chỗ**, kiểm tra một lần l
 | sai key | 401/403 | trả 500 ngay (lỗi cấu hình server) |
 | hết quota | 429 `insufficient_quota` | trả 503 ngay (model khác cùng tài khoản cũng hết) |
 
-Model dự phòng mặc định: `gpt-4o-mini` (LLM), `gpt-4o-mini-transcribe` (STT). Timeout từng lần gọi cấu hình được; tổng chính + dự phòng phải nhỏ hơn `maxDuration` trong `vercel.json`.
+Model dự phòng mặc định: `gpt-4o-mini` (LLM), `gpt-4o-mini-transcribe` (STT). Timeout từng lần gọi cấu hình được. Mặc định LLM 8s + 6s = 14s, STT 13s + 10s = 23s — tổng phải **nhỏ hơn thời gian app chờ** (`mobile/src/lib/api.ts`: turn 15s, stt 25s) và `maxDuration` (30s), nếu không app bỏ cuộc trước còn server chạy tiếp chỉ tốn tiền.
 
 ## Log — `lib/log.ts`
 Mỗi dòng log là 1 JSON có `reqId`. Request id lấy từ header `x-request-id` của app (nếu hợp lệ) hoặc tự sinh, trả lại trong header `x-request-id` và trong body lỗi `{ error, requestId }`.

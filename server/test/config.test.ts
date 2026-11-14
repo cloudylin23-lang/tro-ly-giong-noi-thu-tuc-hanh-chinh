@@ -18,8 +18,8 @@ describe('loadConfig', () => {
       llmModel: 'gpt-4.1-mini',
       llmFallbackModel: 'gpt-4o-mini',
       reasoningEffort: undefined,
-      llmTimeoutMs: 10_000,
-      sttTimeoutMs: 15_000,
+      llmTimeoutMs: 8_000,
+      sttTimeoutMs: 13_000,
     });
   });
 
@@ -51,7 +51,7 @@ describe('loadConfig', () => {
     expect(problems.join('\n')).toMatch(/OPENAI_REASONING_EFFORT/);
     expect(problems.join('\n')).toMatch(/OPENAI_LLM_TIMEOUT_MS/);
     expect(problems.join('\n')).toMatch(/OPENAI_STT_TIMEOUT_MS/);
-    expect(config.llmTimeoutMs).toBe(10_000);
+    expect(config.llmTimeoutMs).toBe(8_000);
     expect(config.reasoningEffort).toBeUndefined();
   });
 

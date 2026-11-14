@@ -170,13 +170,15 @@ export async function structured<T>(opts: {
         { timeout: timeoutMs, maxRetries: 0 },
       );
       recordUsage('llm', a, res.usage); // tính cả khi output sai định dạng — vẫn tốn tiền
-      // Sai định dạng → HttpError 502 → classifyError = 'model' → thử model dự phòng
+      // Rỗng / sai định dạng → HttpError 502 → classifyError = 'model' → thử model dự phòng
+      if (!res.output_text) throw new HttpError(502, `AI không trả kết quả (status: ${res.status ?? 'unknown'})`);
       return parseOutput(res.output_text, opts.validate);
     },
   );
 }
 
 export function parseOutput<T>(text: string, validate?: (data: unknown) => data is T): T {
+  if (!text) throw new HttpError(502, 'AI không trả kết quả');
   let data: unknown;
   try {
     data = JSON.parse(text);

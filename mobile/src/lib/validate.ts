@@ -37,7 +37,7 @@ export function check(field: FieldShape, raw: string): Checked {
     case 'phone': {
       let digits = v.replace(/\D/g, '');
       if (digits.startsWith('84')) digits = `0${digits.slice(2)}`;
-      if (!/^0\d{9,10}$/.test(digits)) return { ok: false, reason: 'Số điện thoại cần 10 số, bắt đầu bằng số 0.' };
+      if (!/^0\d{9}$/.test(digits)) return { ok: false, reason: 'Số điện thoại cần 10 số, bắt đầu bằng số 0.' };
       return { ok: true, value: digits };
     }
 
@@ -66,33 +66,43 @@ const pad = (n: number) => String(n).padStart(2, '0');
 const fold = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/gi, 'd').toLowerCase().trim();
 const optionLabel = (field: FieldShape, value: string) => field.options?.find((o) => o.value === value)?.label ?? value;
 
-// Từ chỉ MỘT chữ số (đã bỏ dấu). AI hay đọc nhầm "năm tám" thành 85 nên dãy số do code tự đổi.
+// Từ chỉ MỘT chữ số, so khớp ĐÚNG DẤU: "bà", "Nam", "tạm", "sau", "từ", "Lê" không phải chữ số.
+// AI hay đọc nhầm "năm tám" thành 85 nên dãy số do code tự đổi.
 const DIGIT_WORDS: Record<string, string> = {
-  khong: '0', linh: '0', le: '0',
-  mot: '1',
-  hai: '2', ba: '3', bon: '4', tu: '4',
-  nam: '5', lam: '5', sau: '6', bay: '7', tam: '8', chin: '9',
+  không: '0', linh: '0', lẻ: '0',
+  một: '1', mốt: '1',
+  hai: '2', ba: '3', bốn: '4', tư: '4',
+  năm: '5', lăm: '5', sáu: '6', bảy: '7', bẩy: '7', tám: '8', chín: '9',
+};
+// Cả câu gõ không dấu thì mới nhận dạng chữ số không dấu
+const DIGIT_WORDS_PLAIN: Record<string, string> = {
+  khong: '0', mot: '1', hai: '2', ba: '3', bon: '4', nam: '5', sau: '6', bay: '7', tam: '8', chin: '9',
 };
 // Có các từ này nghĩa là đọc kiểu "mười hai", "một trăm" → không tự đổi được, để AI lo
 const NUMBER_WORDS = new Set(['muoi', 'tram', 'nghin', 'ngan', 'trieu']);
 
 /**
  * Lấy dãy chữ số từ câu nói, mỗi từ chỉ số = đúng một chữ số.
+ * Chỉ lấy đoạn chữ số LIỀN NHAU dài nhất, để "Không, số của tôi là 0912…" không dính thêm số 0 ở đầu.
  * "số tôi là không chín tám, một hai ba" → "098123". Trả null nếu không chắc chắn.
  */
 export function digitsFromSpeech(text: string): string | null {
-  let out = '';
-  for (const raw of text.toLowerCase().split(/[^\p{L}\p{N}]+/u)) {
+  const lower = text.toLowerCase().normalize('NFC');
+  const words = fold(lower) === lower.trim() ? DIGIT_WORDS_PLAIN : DIGIT_WORDS;
+  let best = '';
+  let run = '';
+  for (const raw of lower.split(/[^\p{L}\p{N}]+/u)) {
     if (!raw) continue;
-    if (/^\d+$/.test(raw)) {
-      out += raw;
-      continue;
+    if (NUMBER_WORDS.has(fold(raw))) return null;
+    const d = /^\d+$/.test(raw) ? raw : words[raw];
+    if (d) {
+      run += d;
+      if (run.length > best.length) best = run;
+    } else {
+      run = '';
     }
-    const w = fold(raw);
-    if (NUMBER_WORDS.has(w)) return null;
-    if (w in DIGIT_WORDS) out += DIGIT_WORDS[w];
   }
-  return out.length >= 6 ? out : null;
+  return best.length >= 6 ? best : null;
 }
 
 /** Cách đọc to một giá trị cho TTS nghe rõ (số đọc từng chữ số, ngày đọc đầy đủ). */

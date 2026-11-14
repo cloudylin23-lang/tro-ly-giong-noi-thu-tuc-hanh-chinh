@@ -56,10 +56,11 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): { config: AppC
     llmModel: str('OPENAI_MODEL', 'gpt-4.1-mini'),
     llmFallbackModel: str('OPENAI_FALLBACK_MODEL', 'gpt-4o-mini'),
     reasoningEffort,
-    // Tổng primary + fallback phải < maxDuration của function trong vercel.json
-    llmTimeoutMs: ms('OPENAI_LLM_TIMEOUT_MS', 10_000),
-    llmFallbackTimeoutMs: ms('OPENAI_LLM_FALLBACK_TIMEOUT_MS', 10_000),
-    sttTimeoutMs: ms('OPENAI_STT_TIMEOUT_MS', 15_000),
+    // Tổng chính + dự phòng phải < thời gian app chờ (mobile/src/lib/api.ts: turn 15s, stt 25s)
+    // và < maxDuration trong vercel.json. Quá thì app bỏ cuộc trước, server chạy tiếp chỉ tốn tiền.
+    llmTimeoutMs: ms('OPENAI_LLM_TIMEOUT_MS', 8_000),
+    llmFallbackTimeoutMs: ms('OPENAI_LLM_FALLBACK_TIMEOUT_MS', 6_000),
+    sttTimeoutMs: ms('OPENAI_STT_TIMEOUT_MS', 13_000),
     sttFallbackTimeoutMs: ms('OPENAI_STT_FALLBACK_TIMEOUT_MS', 10_000),
   };
   return { config, problems };

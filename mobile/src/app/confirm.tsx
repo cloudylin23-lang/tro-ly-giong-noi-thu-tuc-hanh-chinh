@@ -16,7 +16,7 @@ import { space } from '@/theme';
 export default function Confirm() {
   const { procedureId, reply } = useLocalSearchParams<{ procedureId: string; reply?: string }>();
   const procedure = getProcedure(procedureId);
-  const { setSession } = useSession();
+  const { session, setSession } = useSession();
 
   const line = `${reply || `Con hiểu là bác muốn làm thủ tục ${procedure?.name}.`} ${copy.confirm.ask}`;
 
@@ -27,7 +27,8 @@ export default function Confirm() {
   if (!procedure) return <Redirect href="/" />;
 
   const yes = () => {
-    setSession(newSession(procedure.id));
+    // Đang làm dở đúng thủ tục này thì làm tiếp, không xoá những gì bác đã khai
+    if (session?.procedureId !== procedure.id) setSession(newSession(procedure.id));
     router.replace('/ask');
   };
 

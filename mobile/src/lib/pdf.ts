@@ -61,10 +61,17 @@ const page = (title: string, body: string) =>
 
 // ---------- Mẫu CT01 ----------
 
-/** "…, phường Khương Đình, Hà Nội" → "Công an phường Khương Đình" */
+/**
+ * "…, phường Khương Đình, Hà Nội" → "Công an phường Khương Đình".
+ * Chỉ xét từng cụm ngăn bởi dấu phẩy và cụm phải BẮT ĐẦU bằng phường/xã/đặc khu,
+ * để tên đường như "5 Xã Đàn, phường Kim Liên" không bị nhận nhầm.
+ */
 function residenceOffice(address: string | undefined, fallback: string): string {
-  const m = address?.match(/(phường|xã|đặc khu)\s+[^,.;]+/i);
-  return m ? `Công an ${m[0].trim()}` : fallback;
+  const part = address
+    ?.split(/[,;]/)
+    .map((s) => s.trim())
+    .find((s) => /^(phường|xã|đặc khu)\s+\S/i.test(s));
+  return part ? `Công an ${part.replace(/^\S+/, (w) => w.toLowerCase())}` : fallback;
 }
 
 function idBoxes(digits: string | undefined): string {

@@ -69,7 +69,7 @@ export default function Result() {
                 style={[styles.value, !v && { color: colors.danger }]}
                 onPress={() => {
                   // Sửa một mục → quay lại hỏi đúng mục đó
-                  setSession(reopen(session, f.key));
+                  setSession(reopen(procedure, session, f.key));
                   router.replace('/ask');
                 }}
               >
