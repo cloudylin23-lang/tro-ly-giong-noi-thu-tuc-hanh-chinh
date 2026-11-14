@@ -1,7 +1,7 @@
 import { View } from 'react-native';
 import { colors } from '@/theme';
 
-export type IconName = 'home' | 'idCard' | 'close' | 'check' | 'warning' | 'clock' | 'hourglass' | 'money' | 'file' | 'volume' | 'repeat' | 'return' | 'keyboard' | 'mic';
+export type IconName = 'home' | 'idCard' | 'close' | 'check' | 'warning' | 'clock' | 'hourglass' | 'money' | 'file' | 'volume' | 'repeat' | 'return' | 'keyboard' | 'mic' | 'share' | 'map';
 type Line = [number, number, number, number];
 
 const lines: Record<IconName, Line[]> = {
@@ -19,6 +19,8 @@ const lines: Record<IconName, Line[]> = {
   return: [[9, 5, 4, 10], [4, 10, 9, 15], [4, 10, 15, 10], [15, 10, 20, 14], [20, 14, 20, 19]],
   keyboard: [[5, 8, 6, 8], [9, 8, 10, 8], [14, 8, 15, 8], [18, 8, 19, 8], [5, 12, 6, 12], [9, 12, 10, 12], [14, 12, 15, 12], [18, 12, 19, 12], [7, 16, 17, 16]],
   mic: [[5, 11, 5, 14], [5, 14, 8, 18], [8, 18, 16, 18], [16, 18, 19, 14], [19, 14, 19, 11], [12, 18, 12, 22], [8, 22, 16, 22]],
+  share: [[12, 16, 12, 3], [12, 3, 7, 8], [12, 3, 17, 8], [5, 12, 3, 12], [3, 12, 3, 21], [3, 21, 21, 21], [21, 21, 21, 12], [21, 12, 19, 12]],
+  map: [[12, 22, 5, 12], [5, 12, 5, 7], [5, 7, 8, 3], [8, 3, 16, 3], [16, 3, 19, 7], [19, 7, 19, 12], [19, 12, 12, 22], [10, 8, 14, 8], [14, 8, 14, 12], [14, 12, 10, 12], [10, 12, 10, 8]],
 };
 
 /** Icon nét vẽ bằng View native, dùng được trên web và điện thoại, không cần font icon. */

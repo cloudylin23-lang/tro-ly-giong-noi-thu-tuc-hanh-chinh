@@ -90,6 +90,9 @@ export const copy = {
     missingCount: (count: number) => `Còn ${count} mục cần bổ sung. Bác bấm vào mục chưa có thông tin để điền tiếp nhé.`,
     replay: 'Nghe lại',
     pdf: 'Xem / gửi tờ khai PDF',
+    makingPdf: 'Đang tạo PDF…',
+    pdfError: 'Không tạo được PDF',
+    missingValue: 'Chưa có — bấm để bổ sung',
     docsTitle: 'Giấy tờ cần mang',
     notesTitle: 'Lưu ý',
     officeTitle: 'Nơi nộp',
@@ -103,6 +106,8 @@ export const copy = {
     copied: 'Con đã chép sẵn tin nhắn. Bác chọn Zalo, gửi tờ khai, rồi giữ tay vào ô chat và bấm "Dán" để gửi kèm lời nhắn nhé.',
     unavailable: 'Điện thoại này chưa gửi được tệp, bác nhờ con cháu xem giúp nhé.',
     dialogTitle: 'Gửi tờ khai cho con cháu',
+    continue: 'Được',
+    cancel: 'Để sau',
     // Tin nhắn soạn sẵn. KHÔNG đưa số căn cước / số điện thoại vào đây — các số đó đã nằm trong PDF.
     message: (o: { procedure: string; docs: string[]; office: string; address: string; fee?: string; exempt?: string | null }) =>
       [
@@ -122,7 +127,10 @@ export const copy = {
   },
 
   prepare: {
-    openMap: '📍 Mở bản đồ',
+    openMap: 'Mở bản đồ',
+    mapError: 'Chưa mở được bản đồ. Bác thử lại hoặc nhờ con cháu xem địa chỉ giúp nhé.',
+    docsHint: 'Bác bấm vào từng giấy tờ đã chuẩn bị để đánh dấu nhé.',
+    docsProgress: (done: number, total: number) => `Đã chuẩn bị ${done}/${total} giấy tờ`,
     feeExempt: 'Bác được miễn lệ phí',
   },
 

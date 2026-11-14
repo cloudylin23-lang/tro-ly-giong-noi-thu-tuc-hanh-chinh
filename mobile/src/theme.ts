@@ -50,6 +50,9 @@ export const font = {
 
 export const fontFamily = 'BeVietnamPro';
 
+/** Chữ lớn dành cho cán bộ đối chiếu thông tin tại quầy. */
+export const counterFont = 32;
+
 export const space = {
   xs: 4,
   sm: 8,
