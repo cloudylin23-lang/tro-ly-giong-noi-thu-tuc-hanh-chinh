@@ -19,6 +19,8 @@ export const copy = {
     transcribing: 'Con đang nghe lại…',
     thinking: 'Con đang xử lý…',
     tooShort: 'Con chưa nghe thấy gì, bác bấm và nói lại nhé.',
+    slow: 'Mạng hơi chậm, con vẫn đang nghe bác nói…',
+    retry: 'Gửi lại câu vừa nói',
     permissionDenied:
       'App chưa được dùng micro. Bác vào Cài đặt → Ứng dụng → Trợ lý thủ tục → Quyền → Micro để cho phép, hoặc gõ chữ ở dưới.',
   },

@@ -102,9 +102,23 @@ export default function Home() {
           <AppText>“{heard}”</AppText>
         </Bubble>
       ) : null}
+      {voice.slow ? <Bubble who="warning">{copy.mic.slow}</Bubble> : null}
       {message || error ? <Bubble who="warning">{message ?? error ?? ''}</Bubble> : null}
+      {voice.canRetry ? (
+        <BigButton
+          label={`🔁  ${copy.mic.retry}`}
+          disabled={busy || voice.state !== 'idle'}
+          onPress={() => void voice.retry()}
+        />
+      ) : null}
 
-      <TextFallback onSubmit={handleText} disabled={busy} />
+      <TextFallback
+        onSubmit={(t) => {
+          voice.clearRetry();
+          void handleText(t);
+        }}
+        disabled={busy}
+      />
     </Screen>
   );
 }

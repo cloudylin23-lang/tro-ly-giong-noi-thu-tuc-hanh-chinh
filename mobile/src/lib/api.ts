@@ -48,10 +48,26 @@ async function request<T>(path: string, init: RequestInit, timeoutMs: number): P
   } finally {
     clearTimeout(timer);
   }
-  const data = (await res.json().catch(() => ({}))) as { error?: string };
-  if (!res.ok) throw new ApiError(data.error ?? `Lỗi máy chủ ${res.status}`, 'server');
+  let data: { error?: string } | null = null;
+  try {
+    data = (await res.json()) as { error?: string };
+  } catch {
+    // Mất mạng giữa chừng lúc đang nhận body: coi là lỗi mạng để còn gửi lại được
+    if (res.ok) throw new ApiError('Không nhận được trả lời từ máy chủ', 'network');
+  }
+  if (!res.ok) throw new ApiError(data?.error ?? `Lỗi máy chủ ${res.status}`, 'server');
   return data as T;
 }
+
+/** Lỗi do đường truyền (không phải do server) → gửi lại cùng dữ liệu là an toàn */
+export function isRetryable(err: unknown): boolean {
+  return err instanceof ApiError && (err.kind === 'network' || err.kind === 'timeout');
+}
+
+// Server STT tối đa ~23s (13s model chính + 10s dự phòng, server/lib/config.ts) + thời gian upload trên 3G.
+// Phải nhỏ hơn maxDuration của api/stt.ts trong server/vercel.json (60s).
+const STT_TIMEOUT_MS = 35_000;
+const STT_RETRY_DELAY_MS = 1_500;
 
 const toSpec = ({ key, label, kind, hint, options }: Field): FieldSpec => ({
   key,
@@ -70,19 +86,31 @@ export const api = {
     );
   },
 
-  /** Gửi file ghi âm (uri cục bộ) → chữ */
+  /**
+   * Gửi file ghi âm (uri cục bộ) → chữ. Lỗi mạng / hết giờ thì tự gửi lại 1 lần cùng file
+   * (server không lưu gì nên gửi lại an toàn). Lỗi do server (4xx, 5xx) thì không gửi lại.
+   */
   async stt(uri: string): Promise<string> {
-    const form = new FormData();
-    if (Platform.OS === 'web') {
-      // Web: uri là blob: URL, trình duyệt ghi ra webm
-      const blob = await (await fetch(uri)).blob();
-      form.append('audio', blob, blob.type.includes('mp4') ? 'audio.m4a' : 'audio.webm');
-    } else {
-      // React Native nhận object {uri, name, type} làm file trong FormData
-      form.append('audio', { uri, name: 'audio.m4a', type: 'audio/m4a' } as unknown as Blob);
+    const send = async () => {
+      const form = new FormData();
+      if (Platform.OS === 'web') {
+        // Web: uri là blob: URL, trình duyệt ghi ra webm
+        const blob = await (await fetch(uri)).blob();
+        form.append('audio', blob, blob.type.includes('mp4') ? 'audio.m4a' : 'audio.webm');
+      } else {
+        // React Native nhận object {uri, name, type} làm file trong FormData
+        form.append('audio', { uri, name: 'audio.m4a', type: 'audio/m4a' } as unknown as Blob);
+      }
+      const { text } = await request<{ text?: string }>('/api/stt', { method: 'POST', body: form }, STT_TIMEOUT_MS);
+      return text ?? '';
+    };
+    try {
+      return await send();
+    } catch (err) {
+      if (!isRetryable(err)) throw err;
+      await new Promise((r) => setTimeout(r, STT_RETRY_DELAY_MS)); // mạng vừa rớt, chờ chút rồi gửi lại
+      return send();
     }
-    const { text } = await request<{ text: string }>('/api/stt', { method: 'POST', body: form }, 25_000);
-    return text;
   },
 
   classify(utterance: string) {
