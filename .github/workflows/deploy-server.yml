@@ -24,6 +24,7 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 10 # Vercel chặn deploy thì CLI có thể treo — không để job chạy mãi
     defaults:
       run:
         working-directory: server
@@ -44,11 +45,14 @@ jobs:
         if: steps.guard.outputs.skip != 'true'
         with:
           node-version: 24
-      - name: Typecheck trước khi deploy
+      - name: Typecheck + test trước khi deploy
         if: steps.guard.outputs.skip != 'true'
-        run: npm ci && npx tsc --noEmit
+        run: npm ci && npx tsc --noEmit && npm test
+      # Lưu ý: gói Hobby của Vercel chặn deploy khi tác giả commit (người bấm Merge) không phải
+      # chủ team. Với gói Hobby: chủ tài khoản Vercel bấm Merge, chọn "Create a merge commit".
       - name: Deploy production
         if: steps.guard.outputs.skip != 'true'
+        timeout-minutes: 6
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: npx vercel@65.15.0 deploy --prod --yes --token "$VERCEL_TOKEN"

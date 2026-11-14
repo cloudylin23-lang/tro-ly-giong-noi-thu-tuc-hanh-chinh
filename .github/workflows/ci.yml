@@ -36,7 +36,7 @@ jobs:
         run: npx expo export --platform android --output-dir /tmp/export
 
   server:
-    name: Server — typecheck
+    name: Server — typecheck, test
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -51,3 +51,5 @@ jobs:
       - run: npm ci
       - name: Typecheck
         run: npx tsc --noEmit
+      - name: Test (mock OpenAI, không gọi API thật)
+        run: npm test

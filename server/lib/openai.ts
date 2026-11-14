@@ -1,24 +1,18 @@
-import OpenAI from 'openai';
+import OpenAI, { APIConnectionError, APIError } from 'openai';
+import { config, configProblems } from './config.js';
+import { addToRequestTotal, errorFields, log } from './log.js';
+import { estimateCostUsd, normalizeUsage } from './pricing.js';
+
+export { config } from './config.js';
 
 let client: OpenAI | null = null;
 
 export function openai(): OpenAI {
-  if (!process.env.OPENAI_API_KEY) throw new HttpError(500, 'Server chưa có OPENAI_API_KEY');
-  // Không retry và timeout ngắn hơn timeout của app (turn 15s, stt 25s):
-  // app bỏ cuộc rồi thì server chạy tiếp chỉ tốn tiền.
-  client ??= new OpenAI({ timeout: 12_000, maxRetries: 0 });
+  if (configProblems.length) throw new HttpError(500, `Server thiếu cấu hình: ${configProblems.join('; ')}`);
+  // Không để SDK tự retry: việc thử lại / đổi model do withFallback quyết định
+  client ??= new OpenAI({ apiKey: config.openaiApiKey, timeout: 20_000, maxRetries: 0 });
   return client;
 }
-
-export const config = {
-  sttModel: process.env.OPENAI_STT_MODEL || 'gpt-4o-transcribe',
-  llmModel: process.env.OPENAI_MODEL || 'gpt-4.1-mini',
-  reasoningEffort: (process.env.OPENAI_REASONING_EFFORT || undefined) as
-    | 'none'
-    | 'minimal'
-    | 'low'
-    | undefined,
-};
 
 export class HttpError extends Error {
   constructor(
@@ -29,29 +23,168 @@ export class HttpError extends Error {
   }
 }
 
-/** Gọi LLM với Structured Outputs, trả về object đã parse. */
+// ---------------- Phân loại lỗi + model dự phòng ----------------
+
+/**
+ * transient: tạm thời (429 rate limit, timeout, mất kết nối, 5xx) → nên thử model dự phòng
+ * model:     model chính không dùng được (404) hoặc trả kết quả sai định dạng → thử model dự phòng
+ * input:     dữ liệu gửi lên sai (400/422, vd file ghi âm hỏng) → KHÔNG thử lại, thử bao nhiêu cũng lỗi
+ * auth:      sai key / không có quyền (401/403) → KHÔNG thử lại, lỗi cấu hình server
+ * quota:     hết hạn mức tài khoản (429 insufficient_quota) → KHÔNG thử lại, model khác cùng tài khoản cũng hết
+ */
+export type FailureKind = 'transient' | 'model' | 'input' | 'auth' | 'quota' | 'unknown';
+
+export function classifyError(err: unknown): FailureKind {
+  if (err instanceof HttpError) return err.status === 502 ? 'model' : 'input';
+  if (err instanceof APIConnectionError) return 'transient'; // gồm cả APIConnectionTimeoutError
+  if (err instanceof APIError) {
+    const s = err.status;
+    if (s === 429) return err.code === 'insufficient_quota' ? 'quota' : 'transient';
+    if (s === 408 || s === 409 || (typeof s === 'number' && s >= 500)) return 'transient';
+    if (s === 404) return 'model';
+    if (s === 401 || s === 403) return 'auth';
+    if (s === 400 || s === 422) return 'input';
+  }
+  return 'unknown';
+}
+
+const RETRYABLE: ReadonlySet<FailureKind> = new Set(['transient', 'model']);
+
+/** Lỗi trả cho app — câu ngắn, không lộ chi tiết nội bộ. */
+function toHttpError(err: unknown, kind: FailureKind): HttpError {
+  if (err instanceof HttpError) return err;
+  switch (kind) {
+    case 'transient':
+      return new HttpError(503, 'AI đang bận hoặc kết nối tới AI chập chờn, vui lòng thử lại');
+    case 'model':
+      return new HttpError(502, 'AI tạm thời không dùng được');
+    case 'input':
+      return new HttpError(400, 'AI không xử lý được dữ liệu gửi lên');
+    case 'auth':
+      return new HttpError(500, 'Server cấu hình sai khoá OpenAI');
+    case 'quota':
+      return new HttpError(503, 'Đã hết hạn mức sử dụng AI');
+    default:
+      return new HttpError(500, 'Lỗi không xác định khi gọi AI');
+  }
+}
+
+interface Attempt {
+  model: string;
+  timeoutMs: number;
+  isFallback: boolean;
+  startedAt: number;
+}
+
+/**
+ * Ghi 1 dòng log cho mỗi lần gọi OpenAI thành công: model, token, chi phí ước tính.
+ * Cộng dồn vào tổng của request (hiện ở dòng log "request").
+ */
+export function recordUsage(op: 'llm' | 'stt', a: Attempt, usage: unknown): void {
+  const u = normalizeUsage(usage);
+  const costUsd = estimateCostUsd(a.model, u);
+  log.info('openai.call', {
+    op,
+    model: a.model,
+    attempt: a.isFallback ? 'fallback' : 'primary',
+    ms: Date.now() - a.startedAt,
+    ...u,
+    costUsd,
+  });
+  if (costUsd !== null) addToRequestTotal('openaiCostUsd', costUsd);
+  addToRequestTotal('openaiCalls', 1);
+}
+
+/**
+ * Gọi model chính; nếu lỗi tạm thời / model hỏng thì thử 1 lần với model dự phòng.
+ * Lỗi do input, sai key, hết quota → trả lỗi luôn, không thử lại.
+ */
+export async function withFallback<T>(
+  op: 'llm' | 'stt',
+  primary: Pick<Attempt, 'model' | 'timeoutMs'>,
+  fallback: Pick<Attempt, 'model' | 'timeoutMs'> | null,
+  call: (a: Attempt) => Promise<T>,
+): Promise<T> {
+  const run = async (p: Pick<Attempt, 'model' | 'timeoutMs'>, isFallback: boolean) => {
+    const a: Attempt = { ...p, isFallback, startedAt: Date.now() };
+    try {
+      return await call(a);
+    } catch (err) {
+      const kind = classifyError(err);
+      log.warn('openai.failed', {
+        op,
+        model: a.model,
+        attempt: a.isFallback ? 'fallback' : 'primary',
+        kind,
+        ms: Date.now() - a.startedAt,
+        ...errorFields(err),
+      });
+      throw Object.assign(err instanceof Error ? err : new Error(String(err)), { failureKind: kind });
+    }
+  };
+
+  try {
+    return await run(primary, false);
+  } catch (err) {
+    const kind = (err as { failureKind: FailureKind }).failureKind;
+    const canFallback = RETRYABLE.has(kind) && fallback && fallback.model !== primary.model;
+    if (!canFallback) throw toHttpError(err, kind);
+    log.info('openai.fallback', { op, from: primary.model, to: fallback.model, reason: kind });
+    try {
+      return await run(fallback, true);
+    } catch (err2) {
+      throw toHttpError(err2, (err2 as { failureKind: FailureKind }).failureKind);
+    }
+  }
+}
+
+// ---------------- LLM ----------------
+
+/** Gọi LLM với Structured Outputs, trả về object đã parse và đã kiểm tra. Có model dự phòng. */
 export async function structured<T>(opts: {
   name: string;
   schema: Record<string, unknown>;
   instructions: string;
   input: string;
+  /** Kiểm tra lại kết quả ở runtime — không tin tuyệt đối vào strict schema */
+  validate?: (data: unknown) => data is T;
 }): Promise<T> {
-  const res = await openai().responses.create({
-    model: config.llmModel,
-    instructions: opts.instructions,
-    input: opts.input,
-    ...(config.reasoningEffort ? { reasoning: { effort: config.reasoningEffort } } : {}),
-    text: {
-      format: { type: 'json_schema', name: opts.name, schema: opts.schema, strict: true },
+  return withFallback(
+    'llm',
+    { model: config.llmModel, timeoutMs: config.llmTimeoutMs },
+    { model: config.llmFallbackModel, timeoutMs: config.llmFallbackTimeoutMs },
+    async (a) => {
+      const { model, timeoutMs, isFallback } = a;
+      const res = await openai().responses.create(
+        {
+          model,
+          instructions: opts.instructions,
+          input: opts.input,
+          // reasoning chỉ áp cho model chính (model dự phòng có thể không hỗ trợ)
+          ...(config.reasoningEffort && !isFallback ? { reasoning: { effort: config.reasoningEffort } } : {}),
+          text: {
+            format: { type: 'json_schema', name: opts.name, schema: opts.schema, strict: true },
+          },
+          store: false,
+        },
+        { timeout: timeoutMs, maxRetries: 0 },
+      );
+      recordUsage('llm', a, res.usage); // tính cả khi output sai định dạng — vẫn tốn tiền
+      // Rỗng / sai định dạng → HttpError 502 → classifyError = 'model' → thử model dự phòng
+      if (!res.output_text) throw new HttpError(502, `AI không trả kết quả (status: ${res.status ?? 'unknown'})`);
+      return parseOutput(res.output_text, opts.validate);
     },
-    store: false,
-  });
-  if (!res.output_text) {
-    throw new HttpError(502, `AI không trả kết quả (status: ${res.status ?? 'unknown'})`);
-  }
+  );
+}
+
+export function parseOutput<T>(text: string, validate?: (data: unknown) => data is T): T {
+  if (!text) throw new HttpError(502, 'AI không trả kết quả');
+  let data: unknown;
   try {
-    return JSON.parse(res.output_text) as T;
+    data = JSON.parse(text);
   } catch {
-    throw new HttpError(502, 'AI trả kết quả không đúng định dạng JSON');
+    throw new HttpError(502, 'AI trả kết quả không phải JSON');
   }
+  if (validate && !validate(data)) throw new HttpError(502, 'AI trả kết quả không đúng định dạng');
+  return data as T;
 }

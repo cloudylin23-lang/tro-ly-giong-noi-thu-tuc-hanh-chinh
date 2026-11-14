@@ -1,13 +1,20 @@
 // Server local để test không cần Vercel: npm run dev
 // Emulator Android gọi qua http://10.0.2.2:3000 ; điện thoại thật cùng wifi gọi qua http://<IP-laptop>:3000
 // (Chỉ chạy được với bản debug — bản release APK bắt buộc HTTPS, hãy dùng URL Vercel.)
+import './load-env.js'; // phải đứng đầu: nạp .env.local trước khi lib/config.ts đọc env
 import { createServer } from 'node:http';
-import { existsSync } from 'node:fs';
 import health from '../api/health.js';
 import stt from '../api/stt.js';
 import turn from '../api/turn.js';
+import { assertConfig } from '../lib/config.js';
 
-if (existsSync('.env.local')) process.loadEnvFile('.env.local');
+// Thiếu biến bắt buộc → dừng ngay, không đợi tới request thật mới lộ lỗi
+try {
+  assertConfig();
+} catch (err) {
+  console.error((err as Error).message);
+  process.exit(1);
+}
 
 const routes: Record<string, { fetch(req: Request): Promise<Response> }> = {
   '/api/health': health,
